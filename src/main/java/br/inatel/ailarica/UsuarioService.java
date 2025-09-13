@@ -1,0 +1,57 @@
+package br.inatel.ailarica;
+
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+
+class UsuarioService {
+    private final String ARQUIVO = "usuarios.txt";
+
+    // Cadastro
+    public boolean cadastrar(String nome, String email, String senha) {
+        List<Usuario> usuarios = carregarUsuarios();
+
+        for (Usuario u : usuarios) {
+            if (u.getEmail().equalsIgnoreCase(email)) {
+                return false; // já existe
+            }
+        }
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARQUIVO, true))) {
+            writer.write(new Usuario(nome, email, senha).toString());
+            writer.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    // Login
+    public Usuario login(String email, String senha) {
+        List<Usuario> usuarios = carregarUsuarios();
+        for (Usuario u : usuarios) {
+            if (u.getEmail().equalsIgnoreCase(email) && u.getSenha().equals(senha)) {
+                return u;
+            }
+        }
+        return null;
+    }
+
+    // Carregar lista de usuários do arquivo
+    private List<Usuario> carregarUsuarios() {
+        List<Usuario> usuarios = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(ARQUIVO))) {
+            String linha;
+            while ((linha = reader.readLine()) != null) {
+                Usuario u = Usuario.fromString(linha);
+                if (u != null) {
+                    usuarios.add(u);
+                }
+            }
+        } catch (IOException e) {
+            // arquivo pode não existir ainda, ignorar
+        }
+        return usuarios;
+    }
+}
