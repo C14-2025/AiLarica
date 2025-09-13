@@ -9,6 +9,7 @@ public class Main {
 
         System.out.println("1 - Cadastro");
         System.out.println("2 - Login");
+        System.out.println("3 - Atualizar Senha");
         int opcao = scanner.nextInt();
         scanner.nextLine();
 
@@ -38,6 +39,20 @@ public class Main {
                 System.out.println("Login bem-sucedido. Bem-vindo, " + usuario.getNome() + "!");
             } else {
                 System.out.println("Email ou senha incorretos.");
+            }
+        } else if (opcao == 3) {
+            System.out.print("Email: ");
+            String email = scanner.nextLine();
+            System.out.print("Senha Antiga: ");
+            String senhaAntiga = scanner.nextLine();
+            System.out.print("Nova Senha: ");
+            String novaSenha = scanner.nextLine();
+
+            boolean sucesso = usuarioService.atualizarSenha(email, senhaAntiga, novaSenha);
+            if (sucesso) {
+                System.out.println("Senha atualizada com sucesso!");
+            } else {
+                System.out.println("Email ou senha antiga incorretos.");
             }
         }
 

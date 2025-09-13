@@ -26,6 +26,10 @@ class Usuario {
         return senha;
     }
 
+    public void setSenha(String senha) { //Sofia Groke
+        this.senha = senha;
+    }
+
     @Override
     public String toString() {
         return nome + ";" + email + ";" + senha;

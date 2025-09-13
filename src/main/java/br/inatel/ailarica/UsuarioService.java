@@ -38,8 +38,37 @@ class UsuarioService {
         return null;
     }
 
+    // Atualizar Senha
+    public boolean atualizarSenha(String email, String senhaAntiga, String novaSenha) { //Sofia Groke
+        List<Usuario> usuarios = carregarUsuarios();
+        boolean atualizado = false;
+        for (Usuario u : usuarios) {
+            if (u.getEmail().equalsIgnoreCase(email) && u.getSenha().equals(senhaAntiga)) {
+                u.setSenha(novaSenha);
+                atualizado = true;
+                break;
+            }
+        }
+        if (atualizado) {
+            salvarUsuarios(usuarios);
+        }
+        return atualizado;
+    }
+
+    // Salvar lista de usuários no arquivo
+    private void salvarUsuarios(List<Usuario> usuarios) { //Sofia Groke
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARQUIVO, false))) { // false para sobrescrever
+            for (Usuario u : usuarios) {
+                writer.write(u.toString());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     // Carregar lista de usuários do arquivo
-    private List<Usuario> carregarUsuarios() {
+    public List<Usuario> carregarUsuarios() {
         List<Usuario> usuarios = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(ARQUIVO))) {
             String linha;
