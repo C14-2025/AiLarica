@@ -1,6 +1,5 @@
 package br.inatel.ailarica;
 
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +7,7 @@ import java.util.List;
 class UsuarioService {
     private final String ARQUIVO = "usuarios.txt";
 
-    // Cadastro
+    // Cadastro por campos (compatível com versões antigas)
     public boolean cadastrar(String nome, String email, String senha) {
         List<Usuario> usuarios = carregarUsuarios();
 
@@ -27,19 +26,27 @@ class UsuarioService {
         return true;
     }
 
-    // Login
-    public Usuario login(String email, String senha) {
+    // Cadastro por objeto Usuario (novo)
+    public boolean cadastrar(Usuario usuario) {
         List<Usuario> usuarios = carregarUsuarios();
+
         for (Usuario u : usuarios) {
-            if (u.getEmail().equalsIgnoreCase(email) && u.getSenha().equals(senha)) {
-                return u;
+            if (u.getEmail().equalsIgnoreCase(usuario.getEmail())) {
+                return false; // já existe
             }
         }
-        return null;
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARQUIVO, true))) {
+            writer.write(usuario.toString());
+            writer.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return true;
     }
 
-    // Atualizar Senha
-    public boolean atualizarSenha(String email, String senhaAntiga, String novaSenha) { //Sofia Groke
+    // Atualizar senha (mantido de Sofia Groke)
+    public boolean atualizarSenha(String email, String senhaAntiga, String novaSenha) {
         List<Usuario> usuarios = carregarUsuarios();
         boolean atualizado = false;
         for (Usuario u : usuarios) {
@@ -55,9 +62,9 @@ class UsuarioService {
         return atualizado;
     }
 
-    // Salvar lista de usuários no arquivo
-    private void salvarUsuarios(List<Usuario> usuarios) { //Sofia Groke
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARQUIVO, false))) { // false para sobrescrever
+    // Salvar usuários (mantido)
+    private void salvarUsuarios(List<Usuario> usuarios) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARQUIVO, false))) { // sobrescreve
             for (Usuario u : usuarios) {
                 writer.write(u.toString());
                 writer.newLine();
@@ -65,6 +72,31 @@ class UsuarioService {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    // Atualização genérica (ex: confirmar email ou adicionar endereço)
+    public void atualizarUsuarios(List<Usuario> usuarios) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARQUIVO))) {
+            for (Usuario u : usuarios) {
+                writer.write(u.toString());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Login (só permite se confirmado)
+    public Usuario login(String email, String senha) {
+        List<Usuario> usuarios = carregarUsuarios();
+        for (Usuario u : usuarios) {
+            if (u.getEmail().equalsIgnoreCase(email) &&
+                    u.getSenha().equals(senha) &&
+                    u.isConfirmado()) {
+                return u;
+            }
+        }
+        return null;
     }
 
     // Carregar lista de usuários do arquivo
