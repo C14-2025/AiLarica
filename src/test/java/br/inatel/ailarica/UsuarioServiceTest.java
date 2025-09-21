@@ -4,6 +4,13 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import org.junit.jupiter.api.DisplayName;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.*;
+
+import java.util.List;
+import java.util.stream.Stream;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -40,5 +47,31 @@ public class UsuarioServiceTest {
         UsuarioService service = new UsuarioService();
         List<Usuario> lista = service.carregarUsuarios();
         assertFalse(lista.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Cadastrar novo usuário deve funcionar (mocked)")
+    void testCadastrarNovoUsuarioComMock() {
+
+         List<Usuario> listaMock = mock(List.class);
+        when(listaMock.stream()).thenReturn(Stream.empty()); //simula que n tem usuarios cadastrados
+
+        UsuarioService service = new UsuarioService() {
+            @Override
+            public List<Usuario> carregarUsuarios() {
+                return listaMock; //retorna o mock
+            }
+
+            @Override
+            public void atualizarUsuarios(List<Usuario> usuarios) {
+                //faz nada, pra n mexer no arquivo real
+            }
+        };
+
+        boolean sucesso = service.cadastrar("Novo User", "novo@example.com", "senhaNova");
+
+        assertTrue(sucesso, "O cadastro deve ser bem-sucedido");
+
+        verify(listaMock, times(1)).stream();
     }
 }
