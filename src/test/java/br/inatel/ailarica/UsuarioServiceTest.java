@@ -2,6 +2,7 @@ package br.inatel.ailarica;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
@@ -19,6 +20,7 @@ public class UsuarioServiceTest {
     @Test //Vitor
     public void testarCadastroTrue(){
         UsuarioService service = new UsuarioService();
+        service.carregarUsuarios().clear(); //garantir que a lista ta vazia
         
         //rodar esse teste antes do seguinte
         
@@ -53,8 +55,7 @@ public class UsuarioServiceTest {
     @DisplayName("Cadastrar novo usuário deve funcionar (mocked)")
     void testCadastrarNovoUsuarioComMock() {
 
-         List<Usuario> listaMock = mock(List.class);
-        when(listaMock.stream()).thenReturn(Stream.empty()); //simula que n tem usuarios cadastrados
+        List<Usuario> listaMock = new ArrayList<>();
 
         UsuarioService service = new UsuarioService() {
             @Override
@@ -71,7 +72,5 @@ public class UsuarioServiceTest {
         boolean sucesso = service.cadastrar("Novo User", "novo@example.com", "senhaNova");
 
         assertTrue(sucesso, "O cadastro deve ser bem-sucedido");
-
-        verify(listaMock, times(1)).stream();
     }
 }
