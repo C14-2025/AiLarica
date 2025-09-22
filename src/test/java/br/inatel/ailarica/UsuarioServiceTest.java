@@ -1,76 +1,76 @@
 package br.inatel.ailarica;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.DisplayName;
-import org.mockito.Mockito;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.util.List;
-import java.util.stream.Stream;
+class UsuarioServiceTest {
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+    @InjectMocks
+    private UsuarioService usuarioService;
 
-public class UsuarioServiceTest {
-
-    @Test //Vitor
-    public void testarCadastroTrue(){
-        UsuarioService service = new UsuarioService();
-        service.carregarUsuarios().clear(); //garantir que a lista ta vazia
-        
-        //rodar esse teste antes do seguinte
-        
-        String nome = "Teste";
-        String email = "teste@gmail.com";
-        String senha = "123456";
-
-        assertTrue(service.cadastrar(nome, email, senha));
-    }
-
-    @Test //Vitor
-    public void testarCadastroFalse(){
-        UsuarioService service = new UsuarioService();
-
-        //assumindo que esse usuario ja foi cadastrado no teste passado
-
-        String nome = "Teste";
-        String email = "teste@gmail.com";
-        String senha = "123456";
-
-        assertTrue(service.cadastrar(nome, email, senha));
-    }
-
-    @Test //Vitor
-    public void carregarUsuarioFalse(){
-        UsuarioService service = new UsuarioService();
-        List<Usuario> lista = service.carregarUsuarios();
-        assertFalse(lista.isEmpty());
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        // Resetar o arquivo de usuários para cada teste para garantir isolamento
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("usuarios.txt"))) {
+            writer.write("");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
-    @DisplayName("Cadastrar novo usuário deve funcionar (mocked)")
-    void testCadastrarNovoUsuarioComMock() {
+    void CadastrarNovoUsuarioComSucesso() throws IOException {
+        // Arrange
+        Usuario novoUsuario = new Usuario("Teste", "teste@email.com", "senha123");
 
-        List<Usuario> listaMock = new ArrayList<>();
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(usuarioService.ARQUIVO))) {
+            writer.write("");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        UsuarioService service = new UsuarioService() {
-            @Override
-            public List<Usuario> carregarUsuarios() {
-                return listaMock; //retorna o mock
-            }
+        // Act
+        boolean resultado = usuarioService.cadastrar(novoUsuario);
 
-            @Override
-            public void atualizarUsuarios(List<Usuario> usuarios) {
-                //faz nada, pra n mexer no arquivo real
-            }
-        };
+        // Assert
+        assertTrue(resultado, "O cadastro de um novo usuário deveria retornar true.");
 
-        boolean sucesso = service.cadastrar("Novo User", "novo@example.com", "senhaNova");
-
-        assertTrue(sucesso, "O cadastro deve ser bem-sucedido");
+        // Verifica se o usuário foi realmente adicionado ao arquivo
+        List<Usuario> usuariosCarregados = usuarioService.carregarUsuarios();
+        assertTrue(usuariosCarregados.contains(novoUsuario), "O usuário cadastrado deveria estar na lista de usuários carregados.");
     }
-}
+
+    @Test
+    void CadastrarUsuarioExistenteRetornaFalse() throws IOException {
+        // Arrange
+        Usuario usuarioExistente = new Usuario("Existente", "existente@email.com", "senha456");
+
+        // Cadastra o usuário uma vez
+        usuarioService.cadastrar(usuarioExistente);
+
+        // Tenta cadastrar o mesmo usuário novamente
+        boolean resultado = usuarioService.cadastrar(usuarioExistente);
+
+        // Assert
+        assertFalse(resultado, "O cadastro de um usuário existente deveria retornar false.");
+
+        // Verifica se o usuário não foi duplicado no arquivo
+        List<Usuario> usuariosCarregados = usuarioService.carregarUsuarios();
+        long count = usuariosCarregados.stream().filter(u -> u.getEmail().equals(usuarioExistente.getEmail())).count();
+        assertEquals(1, count, "O usuário existente não deveria ser duplicado.");
+    }
