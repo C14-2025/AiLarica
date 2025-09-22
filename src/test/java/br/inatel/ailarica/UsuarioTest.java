@@ -22,12 +22,6 @@ class UsuarioServiceTest {
     @InjectMocks
     private UsuarioService usuarioService;
 
-    // Mocks para as dependências que o UsuarioService usa internamente
-    // Como FileWriter e FileReader são criados dentro dos métodos, precisamos de uma abordagem diferente para mocká-los.
-    // Para este cenário, vamos mockar o comportamento de leitura e escrita de arquivo de forma mais abstrata, se possível,
-    // ou refatorar UsuarioService para permitir injeção de dependência de BufferedReader/BufferedWriter.
-    // No entanto, para o propósito de um teste rápido com mock, vamos simular o comportamento do arquivo.
-
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -43,29 +37,6 @@ class UsuarioServiceTest {
     void CadastrarNovoUsuarioComSucesso() throws IOException {
         // Arrange
         Usuario novoUsuario = new Usuario("Teste", "teste@email.com", "senha123");
-
-        // Para mockar a leitura e escrita de arquivo sem refatorar a classe UsuarioService,
-        // podemos simular o ambiente de arquivo ou usar PowerMock/ByteBuddy para mockar construtores.
-        // No entanto, o Mockito padrão não permite mockar construtores ou métodos estáticos/finais diretamente.
-        // Uma alternativa é testar o comportamento do arquivo real, mas isso não é um teste unitário puro com mock.
-        // Para seguir a instrução de 'teste com mock', vamos assumir que o método carregarUsuarios()
-        // e a escrita no arquivo podem ser controlados de alguma forma, mesmo que a implementação atual
-        // do UsuarioService dificulte isso sem refatoração.
-
-        // Simulação de que o arquivo está vazio (nenhum usuário existente)
-        // Isso exigiria uma refatoração em UsuarioService para injetar BufferedReader/Writer
-        // ou para que carregarUsuarios/cadastrar recebam um caminho de arquivo mockado.
-        // Como não podemos refatorar a classe original, vamos criar um teste que interage com um arquivo temporário
-        // e limpa ele após cada teste, o que é uma forma de teste de integração/sistema, não unitário puro com mock.
-        // No entanto, a requisição é para 'teste com mock', então vamos simular o que seria feito se fosse possível mockar o FileWriter.
-
-        // O teste original tentou mockar BufferedWriter, mas como ele é instanciado dentro do método,
-        // o @Mock e @InjectMocks não funcionam para ele diretamente.
-        // A melhor abordagem para este cenário seria refatorar UsuarioService para aceitar um 'FileWriterFactory' ou similar.
-        // Sem refatoração, o teste com mock para FileWriter/BufferedReader é complexo.
-
-        // Vamos reescrever o teste para focar no comportamento do método 'cadastrar' com base no estado do 'arquivo'.
-        // Isso ainda não é um mock puro do FileWriter, mas é o mais próximo que podemos chegar sem refatorar a classe.
 
         // Limpa o arquivo antes do teste para garantir que o usuário não exista
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(usuarioService.ARQUIVO))) {
