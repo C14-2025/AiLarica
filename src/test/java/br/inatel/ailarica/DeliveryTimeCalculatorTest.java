@@ -1,29 +1,30 @@
 package br.inatel.ailarica;
 
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-public class DeliveryTimeCalculatorTest {
+class DeliveryTimeCalculatorMockTest {
 
-    @Test //Felipe Camposssss
-    @DisplayName("Deve calcular corretamente o tempo de entrega para diferentes tipos de veículo")
-    public void testCalculateDeliveryTimeForDifferentVehicles() {
+    @Test
+    void deveLancarExcecaoQuandoVelocidadeForZero() {
+        // Cria um mock do ISpeedProvider
+        ISpeedProvider speedProviderMock = Mockito.mock(ISpeedProvider.class);
 
-        double distance = 5.0;
-        int bikeTime = DeliveryTimeCalculator.calculateDeliveryTime(distance,
-                DeliveryTimeCalculator.DeliveryType.BIKE);
-        assertEquals(35, bikeTime, "Tempo de entrega de bicicleta incorreto");
+        // Configura para retornar 0 km/h para qualquer tipo de entrega
+        when(speedProviderMock.getSpeed(any())).thenReturn(0.0);
 
-        int motorcycleTime = DeliveryTimeCalculator.calculateDeliveryTime(distance,
-                DeliveryTimeCalculator.DeliveryType.MOTORCYCLE);
-        assertEquals(25, motorcycleTime, "Tempo de entrega de moto incorreto");
+        DeliveryTimeCalculator calculator = new DeliveryTimeCalculator(speedProviderMock);
 
-        int carTime = DeliveryTimeCalculator.calculateDeliveryTime(distance,
-                DeliveryTimeCalculator.DeliveryType.CAR);
-        assertEquals(23, carTime, "Tempo de entrega de carro incorreto");
+        // Verifica que uma exceção é lançada
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> calculator.calculateTravelTime(5.0, DeliveryTimeCalculator.DeliveryType.CAR)
+        );
 
-        assertTrue(carTime < motorcycleTime, "Carro deveria ser mais rápido que moto");
-        assertTrue(motorcycleTime < bikeTime, "Moto deveria ser mais rápida que bicicleta");
+        assertEquals("A velocidade deve ser positiva.", ex.getMessage());
+        verify(speedProviderMock, times(1)).getSpeed(DeliveryTimeCalculator.DeliveryType.CAR);
     }
 }
