@@ -74,3 +74,43 @@ class UsuarioServiceTest {
         long count = usuariosCarregados.stream().filter(u -> u.getEmail().equals(usuarioExistente.getEmail())).count();
         assertEquals(1, count, "O usuário existente não deveria ser duplicado.");
     }
+
+    @Test
+    void testLoginComUsuarioConfirmadoComSucesso() throws IOException {
+
+        List<Usuario> usuariosMock = new ArrayList<>();
+        Usuario usuarioConfirmado = new Usuario("João", "joao@email.com", "senha123");
+        usuarioConfirmado.confirmar();
+        usuariosMock.add(usuarioConfirmado);
+
+        UsuarioService spyUsuarioService = spy(usuarioService);
+        doReturn(usuariosMock).when(spyUsuarioService).carregarUsuarios();
+
+        Usuario resultado = spyUsuarioService.login("joao@email.com", "senha123");
+
+        assertNotNull(resultado);
+        assertEquals("João", resultado.getNome());
+        assertEquals("joao@email.com", resultado.getEmail());
+        assertTrue(resultado.isConfirmado());
+    }
+
+    @Test
+    void testLoginComCredenciaisInvalidas() throws IOException {
+        // Arrange
+        List<Usuario> usuariosMock = new ArrayList<>();
+        Usuario usuario = new Usuario("Pedro", "pedro@email.com", "senhaCorreta");
+        usuario.confirmar();
+        usuariosMock.add(usuario);
+
+        UsuarioService spyUsuarioService = spy(usuarioService);
+        doReturn(usuariosMock).when(spyUsuarioService).carregarUsuarios();
+
+        // Act
+        Usuario resultado = spyUsuarioService.login("pedro@email.com", "senhaErrada");
+
+        // Assert
+        assertNull(resultado, "Login deve retornar null para credenciais inválidas");
+    }
+
+
+
