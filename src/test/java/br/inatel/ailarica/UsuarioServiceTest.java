@@ -112,5 +112,15 @@ class UsuarioServiceTest {
         assertNull(resultado, "Login deve retornar null para credenciais inválidas");
     }
 
+    @Test
+    void testCadastroComEmailInvalido() {
+        Usuario usuario = new Usuario("Teste", "emailinvalido", "123456");
+        assertFalse(usuarioService.cadastrar(usuario));
+    }
 
-
+    @Test
+    void testCadastroComSenhaCurta() {
+        Usuario usuario = new Usuario("Teste", "teste@email.com", "123");
+        assertFalse(usuarioService.cadastrar(usuario));
+    }
+}

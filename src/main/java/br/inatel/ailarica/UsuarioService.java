@@ -5,10 +5,51 @@ import java.util.ArrayList;
 import java.util.List;
 
 class UsuarioService {
-    private final String ARQUIVO = "usuarios.txt";
+    public final String ARQUIVO = "usuarios.txt";
+
+    // Validações de email e senha
+    private boolean isEmailValid(String email) {
+        if (email == null) return false;
+        return email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+    }
+
+    private boolean isSenhaValida(String senha) {
+        if (senha == null) {
+            System.out.println("A senha não pode ser nula.");
+            return false;
+        }
+        boolean valido = true;
+
+        if (senha.length() < 8) {
+            System.out.println("A senha deve ter pelo menos 8 caracteres.");
+            valido = false;
+        }
+
+        if (!senha.matches(".*\\d.*")) {
+            System.out.println("A senha deve conter pelo menos um número.");
+            valido = false;
+        }
+
+        if (!senha.matches(".*[!@#$%^&*(),.?\":{}|<>].*")) {
+            System.out.println("A senha deve conter pelo menos um caractere especial.");
+            valido = false;
+        }
+
+        return valido;
+    }
 
     // Cadastro por campos (compatível com versões antigas)
     public boolean cadastrar(String nome, String email, String senha) {
+        if (!isEmailValid(email)) {
+            System.out.println("Email inválido!");
+            return false;
+        }
+
+        if (!isSenhaValida(senha)) {
+            System.out.println("A senha deve ter pelo menos 6 caracteres!");
+            return false;
+        }
+
         List<Usuario> usuarios = carregarUsuarios();
 
         for (Usuario u : usuarios) {
@@ -26,8 +67,18 @@ class UsuarioService {
         return true;
     }
 
-    // Cadastro por objeto Usuario (novo)
+    // Cadastro por objeto Usuario
     public boolean cadastrar(Usuario usuario) {
+        if (!isEmailValid(usuario.getEmail())) {
+            System.out.println("Email inválido!");
+            return false;
+        }
+
+        if (!isSenhaValida(usuario.getSenha())) {
+            System.out.println("A senha deve ter pelo menos 6 caracteres!");
+            return false;
+        }
+
         List<Usuario> usuarios = carregarUsuarios();
 
         for (Usuario u : usuarios) {
@@ -45,8 +96,12 @@ class UsuarioService {
         return true;
     }
 
-    // Atualizar senha (mantido de Sofia Groke)
+    // Atualizar senha
     public boolean atualizarSenha(String email, String senhaAntiga, String novaSenha) {
+        if (!isSenhaValida(novaSenha)) {
+            return false; // bloqueia atualização se não cumprir regras
+        }
+
         List<Usuario> usuarios = carregarUsuarios();
         boolean atualizado = false;
         for (Usuario u : usuarios) {
