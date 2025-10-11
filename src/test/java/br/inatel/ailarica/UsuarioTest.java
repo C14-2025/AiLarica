@@ -28,3 +28,15 @@ class UsuarioTest {
         assertNull(usuario);
     }
 }
+@Test // João Pedro Escobar
+    void testAdicionarEGetEnderecos() {
+        Usuario usuario = new Usuario("Nome Teste", "email@teste.com", "senha");
+        usuario.adicionarEndereco("Rua A, 123");
+        usuario.adicionarEndereco("Rua B, 456");
+
+        List<String> enderecos = usuario.getEnderecos();
+        assertNotNull(enderecos);
+        assertEquals(2, enderecos.size());
+        assertTrue(enderecos.contains("Rua A, 123"));
+        assertTrue(enderecos.contains("Rua B, 456"));
+    }
