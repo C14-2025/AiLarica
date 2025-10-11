@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-class UsuarioService {
+public class UsuarioService {
     public final String ARQUIVO = "usuarios.txt";
 
     // Validações de email e senha

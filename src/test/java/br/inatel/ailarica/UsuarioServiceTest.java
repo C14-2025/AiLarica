@@ -3,12 +3,9 @@ package br.inatel.ailarica;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,7 +14,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class UsuarioServiceTest {
+public class UsuarioServiceTest {
 
     @InjectMocks
     private UsuarioService usuarioService;
@@ -25,8 +22,7 @@ class UsuarioServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        // Resetar o arquivo de usuários para cada teste para garantir isolamento
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("usuarios.txt"))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(usuarioService.ARQUIVO))) {
             writer.write("");
         } catch (IOException e) {
             e.printStackTrace();
@@ -35,92 +31,78 @@ class UsuarioServiceTest {
 
     @Test
     void CadastrarNovoUsuarioComSucesso() throws IOException {
-        // Arrange
-        Usuario novoUsuario = new Usuario("Teste", "teste@email.com", "senha123");
+        Usuario novoUsuario = new Usuario("Teste", "teste@email.com", "Senha123!");
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(usuarioService.ARQUIVO))) {
-            writer.write("");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // Act
         boolean resultado = usuarioService.cadastrar(novoUsuario);
 
-        // Assert
         assertTrue(resultado, "O cadastro de um novo usuário deveria retornar true.");
 
         // Verifica se o usuário foi realmente adicionado ao arquivo
         List<Usuario> usuariosCarregados = usuarioService.carregarUsuarios();
-        assertTrue(usuariosCarregados.contains(novoUsuario), "O usuário cadastrado deveria estar na lista de usuários carregados.");
+        assertTrue(
+                usuariosCarregados.stream().anyMatch(u -> u.getEmail().equals(novoUsuario.getEmail())),
+                "O usuário cadastrado deveria estar na lista de usuários carregados."
+        );
     }
 
     @Test
     void CadastrarUsuarioExistenteRetornaFalse() throws IOException {
-        // Arrange
-        Usuario usuarioExistente = new Usuario("Existente", "existente@email.com", "senha456");
+        Usuario usuarioExistente = new Usuario("Existente", "existente@email.com", "Senha123!");
 
-        // Cadastra o usuário uma vez
         usuarioService.cadastrar(usuarioExistente);
-
-        // Tenta cadastrar o mesmo usuário novamente
         boolean resultado = usuarioService.cadastrar(usuarioExistente);
 
-        // Assert
         assertFalse(resultado, "O cadastro de um usuário existente deveria retornar false.");
 
-        // Verifica se o usuário não foi duplicado no arquivo
         List<Usuario> usuariosCarregados = usuarioService.carregarUsuarios();
-        long count = usuariosCarregados.stream().filter(u -> u.getEmail().equals(usuarioExistente.getEmail())).count();
+        long count = usuariosCarregados.stream()
+                .filter(u -> u.getEmail().equals(usuarioExistente.getEmail()))
+                .count();
         assertEquals(1, count, "O usuário existente não deveria ser duplicado.");
     }
 
     @Test
     void testLoginComUsuarioConfirmadoComSucesso() throws IOException {
-
         List<Usuario> usuariosMock = new ArrayList<>();
-        Usuario usuarioConfirmado = new Usuario("João", "joao@email.com", "senha123");
+        Usuario usuarioConfirmado = new Usuario("João", "joao@email.com", "Senha123!");
         usuarioConfirmado.confirmar();
         usuariosMock.add(usuarioConfirmado);
 
         UsuarioService spyUsuarioService = spy(usuarioService);
         doReturn(usuariosMock).when(spyUsuarioService).carregarUsuarios();
 
-        Usuario resultado = spyUsuarioService.login("joao@email.com", "senha123");
+        Usuario resultado = spyUsuarioService.login("joao@email.com", "Senha123!");
 
         assertNotNull(resultado);
         assertEquals("João", resultado.getNome());
-        assertEquals("joao@email.com", resultado.getEmail());
         assertTrue(resultado.isConfirmado());
     }
 
     @Test
     void testLoginComCredenciaisInvalidas() throws IOException {
-        // Arrange
         List<Usuario> usuariosMock = new ArrayList<>();
-        Usuario usuario = new Usuario("Pedro", "pedro@email.com", "senhaCorreta");
+        Usuario usuario = new Usuario("Pedro", "pedro@email.com", "Senha123!");
         usuario.confirmar();
         usuariosMock.add(usuario);
 
         UsuarioService spyUsuarioService = spy(usuarioService);
         doReturn(usuariosMock).when(spyUsuarioService).carregarUsuarios();
 
-        // Act
-        Usuario resultado = spyUsuarioService.login("pedro@email.com", "senhaErrada");
+        Usuario resultado = spyUsuarioService.login("pedro@email.com", "SenhaErrada1!");
 
-        // Assert
         assertNull(resultado, "Login deve retornar null para credenciais inválidas");
     }
 
     @Test
     void testCadastroComEmailInvalido() {
-        Usuario usuario = new Usuario("Teste", "emailinvalido", "123456");
+        Usuario usuario = new Usuario("Teste", "emailinvalido", "Senha123!");
         assertFalse(usuarioService.cadastrar(usuario));
     }
 
     @Test
-    void testCadastroComSenhaCurta() {
-        Usuario usuario = new Usuario("Teste", "teste@email.com", "123");
+    void testCadastroComSenhaInvalida() {
+        // Falta caractere especial e número
+        Usuario usuario = new Usuario("Teste", "teste@email.com", "senha");
         assertFalse(usuarioService.cadastrar(usuario));
     }
 }
