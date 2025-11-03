@@ -1,7 +1,13 @@
 package br.inatel.ailarica.Restaurantes;
-
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import java.util.ArrayList;
 import java.util.List;
+
+@Getter
+@Setter
+@ToString
 
 public class Restaurante {
     private int idRestaurante;
@@ -31,30 +37,12 @@ public class Restaurante {
         this.cardapio = (cardapio != null) ? cardapio : new ArrayList<>();
     }
 
-    // Getters e Setters básicos
-    public String getNome() {
-        return nome;
-    }
-
-    public List<String> getCardapio() {
-        return cardapio;
-    }
-
-    public RestauranteHorario getHorarios() {
-        return horarios;
-    }
 
     public void setHorarios(RestauranteHorario horarios) {
         this.horarios = horarios;
     }
 
-    public void adicionarPrato(String prato) {
-        cardapio.add(prato);
-    }
 
-    public void removerPrato(String prato) {
-        cardapio.remove(prato);
-    }
 
     public void ativar() {
         this.ativo = true;
@@ -64,10 +52,5 @@ public class Restaurante {
         this.ativo = false;
     }
 
-    // Para exibir informações resumidas
-    @Override
-    public String toString() {
-        return nome + ";" + String.join(",", cardapio);
-    }
 }
 

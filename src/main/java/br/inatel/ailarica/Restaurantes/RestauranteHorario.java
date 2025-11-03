@@ -1,8 +1,18 @@
 package br.inatel.ailarica.Restaurantes;
+import java.util.Scanner;
 
 public class RestauranteHorario {
     private int[] horariosAbertura = new int[7]; // ha1..ha7
     private int[] horariosFechamento = new int[7]; // hf1..hf7
+    private String[] diasSemana = {
+            "Segunda-feira", // 0
+            "Terça-feira",   // 1
+            "Quarta-feira",  // 2
+            "Quinta-feira",  // 3
+            "Sexta-feira",   // 4
+            "Sábado",        // 5
+            "Domingo"        // 6
+    };
 
     public RestauranteHorario(int[] horariosAbertura, int[] horariosFechamento) {
         if (horariosAbertura.length != 7 || horariosFechamento.length != 7) {
@@ -35,5 +45,15 @@ public class RestauranteHorario {
 
     public void setFechamento(int dia, int horario) {
         horariosFechamento[dia] = horario;
+    }
+
+    public void setHorariosHorario(int[] horariosAbertura , int[] horariosFechamento) {
+        System.out.println("Em Horário Militar 00:00 -> 0000");
+        Scanner sc = new Scanner(System.in);
+        for(int i = 0; i < 6; i++) {
+            System.out.println("O seu estabelecimento abre que horas na " + diasSemana[i] + "?: ");
+            int hora = sc.nextInt();
+
+        }
     }
 }
