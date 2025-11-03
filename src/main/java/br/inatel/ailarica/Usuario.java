@@ -3,7 +3,7 @@ package br.inatel.ailarica;
 import java.util.ArrayList;
 import java.util.List;
 
-class Usuario {
+public class Usuario {
     private String nome;
     private String email;
     private String senha;

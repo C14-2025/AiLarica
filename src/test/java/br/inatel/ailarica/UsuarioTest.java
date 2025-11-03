@@ -2,33 +2,52 @@ package br.inatel.ailarica;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
 
-class UsuarioTest {
+public class UsuarioTest {
 
-    @Test //João Pedro Escobar
+    @Test
     void testToString() {
-        Usuario usuario = new Usuario("Teste Nome", "teste@email.com", "senha123");
-        assertEquals("Teste Nome;teste@email.com;senha123", usuario.toString());
+        Usuario usuario = new Usuario("Teste Nome", "teste@email.com", "Senha123!");
+        // confirmando que o usuário ainda não foi confirmado e sem endereços
+        assertEquals("Teste Nome;teste@email.com;Senha123!;false;", usuario.toString());
     }
 
-    @Test //João Pedro Escobar
+    @Test
     void testFromString() {
-        String linha = "Teste Nome;teste@email.com;senha123";
+        String linha = "Teste Nome;teste@email.com;Senha123!;false;";
         Usuario usuario = Usuario.fromString(linha);
         assertNotNull(usuario);
         assertEquals("Teste Nome", usuario.getNome());
         assertEquals("teste@email.com", usuario.getEmail());
-        assertEquals("senha123", usuario.getSenha());
+        assertEquals("Senha123!", usuario.getSenha());
+        assertFalse(usuario.isConfirmado());
+        assertTrue(usuario.getEnderecos().isEmpty());
     }
 
-    @Test //João Pedro Escobar
-    void testFromStringComDadosInvalidos() {
-        String linha = "Teste Nome;teste@email.com";
+    @Test
+    void testFromStringComEnderecos() {
+        String linha = "Nome Teste;teste@email.com;Senha123!;true;RuaA123,RuaB456";
         Usuario usuario = Usuario.fromString(linha);
-        assertNull(usuario);
+        assertNotNull(usuario);
+        assertEquals("Nome Teste", usuario.getNome());
+        assertEquals("teste@email.com", usuario.getEmail());
+        assertEquals("Senha123!", usuario.getSenha());
+        assertTrue(usuario.isConfirmado());
+        List<String> enderecos = usuario.getEnderecos();
+        assertEquals(2, enderecos.size());
+        assertTrue(enderecos.contains("RuaA123"));
+        assertTrue(enderecos.contains("RuaB456"));
     }
-}
-@Test // João Pedro Escobar
+
+    @Test
+    void testFromStringComDadosInvalidos() {
+        String linha = "Teste Nome;teste@email.com;Senha123!";
+        Usuario usuario = Usuario.fromString(linha);
+        assertNull(usuario, "Deve retornar null se a string não tiver pelo menos 4 partes");
+    }
+
+    @Test
     void testAdicionarEGetEnderecos() {
         Usuario usuario = new Usuario("Nome Teste", "email@teste.com", "senha");
         usuario.adicionarEndereco("Rua A, 123");
@@ -40,3 +59,4 @@ class UsuarioTest {
         assertTrue(enderecos.contains("Rua A, 123"));
         assertTrue(enderecos.contains("Rua B, 456"));
     }
+}
