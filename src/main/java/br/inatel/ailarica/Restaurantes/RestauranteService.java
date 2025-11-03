@@ -1,4 +1,4 @@
-package br.inatel.ailarica;
+package br.inatel.ailarica.Restaurantes;
 
 public class RestauranteService {
 
