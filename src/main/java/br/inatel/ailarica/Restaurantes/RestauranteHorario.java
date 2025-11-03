@@ -1,19 +1,23 @@
 package br.inatel.ailarica.Restaurantes;
+
 import java.util.Scanner;
 
 public class RestauranteHorario {
-    private int[] horariosAbertura = new int[7]; // ha1..ha7
-    private int[] horariosFechamento = new int[7]; // hf1..hf7
-    private String[] diasSemana = {
-            "Segunda-feira", // 0
-            "Terça-feira",   // 1
-            "Quarta-feira",  // 2
-            "Quinta-feira",  // 3
-            "Sexta-feira",   // 4
-            "Sábado",        // 5
-            "Domingo"        // 6
+
+    private int[] horariosAbertura = new int[7];   // Segunda (0) a Domingo (6)
+    private int[] horariosFechamento = new int[7];
+
+    private final String[] diasSemana = {
+            "Segunda-feira", "Terça-feira", "Quarta-feira",
+            "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"
     };
 
+    // Construtor vazio
+    public RestauranteHorario() {
+        // Inicializa arrays com 0
+    }
+
+    // Construtor com arrays
     public RestauranteHorario(int[] horariosAbertura, int[] horariosFechamento) {
         if (horariosAbertura.length != 7 || horariosFechamento.length != 7) {
             throw new IllegalArgumentException("É necessário informar 7 horários para cada.");
@@ -22,18 +26,23 @@ public class RestauranteHorario {
         this.horariosFechamento = horariosFechamento;
     }
 
+    // Converte int HHmm em string HH:mm
     public static String intToString(int horario) {
         int horas = horario / 100;
         int minutos = horario % 100;
+
+        if (horas < 0 || horas > 23 || minutos < 0 || minutos > 59) {
+            throw new IllegalArgumentException("Horário inválido: " + horario);
+        }
+
         return String.format("%02d:%02d", horas, minutos);
     }
 
-    // Pega horário de abertura de um dia (0 = domingo, 6 = sábado)
+    // Getters individuais
     public String getAbertura(int dia) {
         return intToString(horariosAbertura[dia]);
     }
 
-    // Pega horário de fechamento de um dia (0 = domingo, 6 = sábado)
     public String getFechamento(int dia) {
         return intToString(horariosFechamento[dia]);
     }
@@ -47,13 +56,27 @@ public class RestauranteHorario {
         horariosFechamento[dia] = horario;
     }
 
-    public void setHorariosHorario(int[] horariosAbertura , int[] horariosFechamento) {
-        System.out.println("Em Horário Militar 00:00 -> 0000");
+    // Ler horários do usuário via Scanner
+    public void setHorarios() {
         Scanner sc = new Scanner(System.in);
-        for(int i = 0; i < 6; i++) {
-            System.out.println("O seu estabelecimento abre que horas na " + diasSemana[i] + "?: ");
-            int hora = sc.nextInt();
+        System.out.println("Informe os horários do restaurante no formato HHmm (ex: 1200):");
 
+        for (int i = 0; i < 7; i++) {
+            System.out.print("Hora de abertura na " + diasSemana[i] + ": ");
+            horariosAbertura[i] = sc.nextInt();
+
+            System.out.print("Hora de fechamento na " + diasSemana[i] + ": ");
+            horariosFechamento[i] = sc.nextInt();
+        }
+    }
+
+    // Imprimir todos os horários para conferência
+    public void printHorarios() {
+        System.out.println("Horários do restaurante:");
+        for (int i = 0; i < 7; i++) {
+            System.out.println(diasSemana[i] + ": " +
+                    intToString(horariosAbertura[i]) + " - " +
+                    intToString(horariosFechamento[i]));
         }
     }
 }

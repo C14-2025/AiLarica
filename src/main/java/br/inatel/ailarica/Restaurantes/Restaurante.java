@@ -1,4 +1,5 @@
 package br.inatel.ailarica.Restaurantes;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -28,7 +29,7 @@ public class Restaurante {
         this.idRestaurante = idRestaurante;
         this.nome = nome;
         this.descricao = descricao;
-        this.horarios = horarios;
+        this.horarios = new RestauranteHorario();
         this.endereco = endereco;
         this.telefone = telefone;
         this.ativo = ativo;
@@ -38,11 +39,9 @@ public class Restaurante {
     }
 
 
-    public void setHorarios(RestauranteHorario horarios) {
-        this.horarios = horarios;
+    public void setHora() {
+        this.horarios.setHorarios(); // apenas chama o método
     }
-
-
 
     public void ativar() {
         this.ativo = true;
