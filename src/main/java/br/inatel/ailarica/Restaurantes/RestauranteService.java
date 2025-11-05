@@ -1,47 +1,53 @@
 package br.inatel.ailarica.Restaurantes;
 
+import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+@Service
 public class RestauranteService {
 
-    private List<Restaurante> restaurantes = new ArrayList<>();
+    private final List<Restaurante> restaurantes = new ArrayList<>();
+    private int proximoId = 1;
 
-    // Cadastrar novo restaurante
-    public void cadastrarRestaurante(Restaurante r) {
-        restaurantes.add(r);
-        System.out.println("Restaurante cadastrado: " + r.getNome());
+    // Criar novo restaurante
+    public Restaurante criar(Restaurante novo) {
+        novo.setIdRestaurante(proximoId++);
+        restaurantes.add(novo);
+        return novo;
     }
 
-    // Consultar restaurante pelo ID
-    public Restaurante buscarPorId(int id) {
+    // Listar todos
+    public List<Restaurante> listarTodos() {
+        return restaurantes;
+    }
+
+    // Buscar por id
+    public Optional<Restaurante> buscarPorId(int id) {
         return restaurantes.stream()
                 .filter(r -> r.getIdRestaurante() == id)
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
-    // Atualizar nome e descrição
-    public void atualizarInfo(int id, String nome, String descricao) {
-        Restaurante r = buscarPorId(id);
-        if (r != null) {
-            r.setNome(nome);
-            r.setDescricao(descricao);
-            System.out.println("Informações atualizadas!");
-        }
+    // Atualizar
+    public Optional<Restaurante> atualizar(int id, Restaurante atualizado) {
+        return buscarPorId(id).map(r -> {
+            r.setNome(atualizado.getNome());
+            r.setDescricao(atualizado.getDescricao());
+            r.setEndereco(atualizado.getEndereco());
+            r.setTelefone(atualizado.getTelefone());
+            r.setAtivo(atualizado.isAtivo());
+            r.setAvaliacao(atualizado.getAvaliacao());
+            r.setFotoPerfil(atualizado.getFotoPerfil());
+            r.setCardapio(atualizado.getCardapio());
+            r.setHorarios(atualizado.getHorarios());
+            return r;
+        });
     }
 
-    // Adicionar prato ao cardápio
-    public void adicionarPrato(int id, String prato) {
-        Restaurante r = buscarPorId(id);
-        if (r != null) {
-            r.getCardapio().add(prato);
-            System.out.println("Prato adicionado: " + prato);
-        }
-    }
-
-    // Listar todos restaurantes
-    public List<Restaurante> listarRestaurantes() {
-        return restaurantes;
+    // Deletar
+    public boolean deletar(int id) {
+        return restaurantes.removeIf(r -> r.getIdRestaurante() == id);
     }
 }
