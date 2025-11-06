@@ -7,7 +7,7 @@ import java.util.List;
 public class RestauranteDAO {
 
     // Configuração da conexão
-    private static final String URL = "jdbc:mysql://localhost:3306/ailari_db";
+    private static final String URL = "jdbc:mysql://localhost:3306/ailarica_db";
     private static final String USER = "root";
     private static final String PASSWORD = "minecraft123321"; // use sua senha
 
