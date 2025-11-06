@@ -9,7 +9,7 @@ public class RestauranteDAO {
     // Configuração da conexão
     private static final String URL = "jdbc:mysql://localhost:3306/ailarica_db";
     private static final String USER = "root";
-    private static final String PASSWORD = "minecraft123321"; // use sua senha
+    private static final String PASSWORD = "minecraft123321";
 
     // Método auxiliar para obter a conexão
     private Connection conectar() throws SQLException {
@@ -126,26 +126,18 @@ public class RestauranteDAO {
         }
     }
 
-    public void inserir(Restaurante r) {
-        String sql = "INSERT INTO restaurante (nome, descricao, endereco, telefone, ativo, avaliacao, fotoPerfil) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    // ALTERAR STATUS
+    public boolean atualizarStatus(int id, boolean ativo) {
+        String sql = "UPDATE restaurante SET ativo = ? WHERE idRestaurante = ?";
         try (Connection conn = conectar();
-
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, r.getNome());
-            ps.setString(2, r.getDescricao());
-            ps.setString(3, r.getEndereco());
-            ps.setString(4, r.getTelefone());
-            ps.setBoolean(5, r.isAtivo());
-            ps.setFloat(6, r.getAvaliacao());
-            ps.setString(7, r.getFotoPerfil());
-
-            ps.executeUpdate();
-            System.out.println("✅ Restaurante inserido: " + r.getNome());
-
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setBoolean(1, ativo);
+            stmt.setInt(2, id);
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
     }
-
 }
