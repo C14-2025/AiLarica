@@ -22,21 +22,28 @@ public class Restaurante {
     private String fotoPerfil;
     private List<String> cardapio;
 
-    // Construtor
+
     public Restaurante(int idRestaurante, String nome, String descricao,
-                       RestauranteHorario horarios, String endereco, String telefone,
-                       boolean ativo, String fotoPerfil, List<String> cardapio) {
+                       RestauranteHorario horarios, String endereco,
+                       String telefone, boolean ativo, String fotoPerfil,
+                       List<String> cardapio) {
         this.idRestaurante = idRestaurante;
         this.nome = nome;
         this.descricao = descricao;
-        this.horarios = new RestauranteHorario();
+        this.horarios = horarios;
         this.endereco = endereco;
         this.telefone = telefone;
         this.ativo = ativo;
         this.fotoPerfil = fotoPerfil;
-        this.avaliacao = 0.0f; // Inicializando avaliação como zero
-        this.cardapio = (cardapio != null) ? cardapio : new ArrayList<>();
+        this.cardapio = cardapio;
+        this.avaliacao = 0.0f; // valor padrão
     }
+
+    // Construtor
+    public Restaurante() {
+        // construtor padrão vazio
+    }
+
 
 
     public void setHora() {
