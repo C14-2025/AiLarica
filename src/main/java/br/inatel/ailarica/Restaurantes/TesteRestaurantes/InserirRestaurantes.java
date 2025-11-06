@@ -55,9 +55,9 @@ public class InserirRestaurantes {
                 Arrays.asList("Sorvete de gravidade zero", "Milkshake elétrico")
         );
 
-        dao.inserir(r1);
-        dao.inserir(r2);
-        dao.inserir(r3);
+        dao.criar(r1);
+        dao.criar(r2);
+        dao.criar(r3);
 
         System.out.println("✅ Restaurantes inseridos com sucesso!");
     }

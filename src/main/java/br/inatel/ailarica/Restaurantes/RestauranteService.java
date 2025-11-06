@@ -7,43 +7,67 @@ import java.util.Optional;
 @Service
 public class RestauranteService {
 
-    private final RestauranteDAO dao = new RestauranteDAO();
+    private final RestauranteDAO restauranteDAO = new RestauranteDAO(); // ✅ instância manual
 
-    // Criar novo restaurante (salva no banco)
+    // Criar novo restaurante
     public Restaurante criar(Restaurante novo) {
-        dao.criar(novo);
+        restauranteDAO.criar(novo);
         return novo;
     }
 
-    // Listar todos (do banco)
+    // Listar todos
     public List<Restaurante> listarTodos() {
-        return dao.listarTodos();
+        return restauranteDAO.listarTodos();
     }
 
-    // Buscar por ID (do banco)
+    // Buscar por id
     public Optional<Restaurante> buscarPorId(int id) {
-        Restaurante r = dao.buscarPorId(id);
+        Restaurante r = restauranteDAO.buscarPorId(id);
         return Optional.ofNullable(r);
     }
 
-    // Atualizar (no banco)
+    // Atualizar
     public Optional<Restaurante> atualizar(int id, Restaurante atualizado) {
-        Restaurante existente = dao.buscarPorId(id);
+        Restaurante existente = restauranteDAO.buscarPorId(id);
         if (existente != null) {
             atualizado.setIdRestaurante(id);
-            dao.atualizar(atualizado);
+            restauranteDAO.atualizar(atualizado);
             return Optional.of(atualizado);
         }
         return Optional.empty();
     }
 
-    // Deletar (no banco)
+    // Deletar
     public boolean deletar(int id) {
-        Restaurante existente = dao.buscarPorId(id);
+        Restaurante existente = restauranteDAO.buscarPorId(id);
         if (existente != null) {
-            dao.deletar(id);
+            restauranteDAO.deletar(id);
             return true;
         }
         return false;
+    }
+
+    // Ativar
+    public boolean ativar(int id) {
+        return restauranteDAO.atualizarStatus(id, true);
+    }
+
+    // Desativar
+    public boolean desativar(int id) {
+        return restauranteDAO.atualizarStatus(id, false);
+    }
+
+    // Alternar
+    public boolean alternar(int id) {
+        Restaurante r = restauranteDAO.buscarPorId(id);
+        if (r == null) return false;
+        boolean novoStatus = !r.isAtivo();
+        return restauranteDAO.atualizarStatus(id, novoStatus);
+    }
+
+    public boolean atualizarStatus(int id, boolean status) {
+        Restaurante r = restauranteDAO.buscarPorId(id);
+        if (r == null) return false;
+        return restauranteDAO.atualizarStatus(id, status);
     }
 }

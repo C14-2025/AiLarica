@@ -5,6 +5,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+
+import org.springframework.stereotype.Repository;
+import java.sql.*;
+
 @RestController
 @RequestMapping("/restaurantes")
 public class RestauranteController {
@@ -42,5 +46,36 @@ public class RestauranteController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @Autowired
+    private RestauranteService restauranteService;
+
+    // ✅ Ativar restaurante
+    @PutMapping("/{id}/ativar")
+    public ResponseEntity<String> ativarRestaurante(@PathVariable int id) {
+        boolean sucesso = restauranteService.atualizarStatus(id, true);
+        if (sucesso) {
+            return ResponseEntity.ok("✅ Restaurante ativado com sucesso!");
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // 🚫 Desativar restaurante
+    @PutMapping("/{id}/desativar")
+    public ResponseEntity<String> desativarRestaurante(@PathVariable int id) {
+        boolean sucesso = restauranteService.atualizarStatus(id, false);
+        if (sucesso) {
+            return ResponseEntity.ok("🚫 Restaurante desativado com sucesso!");
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // 🔁 Alternar status (toggle)
+    @PutMapping("/{id}/alternar")
+    public ResponseEntity<String> alternar(@PathVariable int id) {
+        return service.alternar(id)
+                ? ResponseEntity.ok("Status do restaurante alternado!")
+                : ResponseEntity.status(404).body("Restaurante não encontrado!");
     }
 }
