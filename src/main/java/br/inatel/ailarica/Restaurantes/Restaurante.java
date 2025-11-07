@@ -20,13 +20,13 @@ public class Restaurante {
     private float avaliacao;
     private boolean ativo;
     private String fotoPerfil;
-    private List<String> cardapio;
+    private List<Prato> cardapio = new ArrayList<>();
 
 
     public Restaurante(int idRestaurante, String nome, String descricao,
                        RestauranteHorario horarios, String endereco,
                        String telefone, boolean ativo, String fotoPerfil,
-                       List<String> cardapio) {
+                       List<Prato> cardapio) {
         this.idRestaurante = idRestaurante;
         this.nome = nome;
         this.descricao = descricao;
@@ -56,6 +56,23 @@ public class Restaurante {
 
     public void desativar() {
         this.ativo = false;
+    }
+
+    public void adicionarPrato(Prato prato) {
+        cardapio.add(prato);
+    }
+
+    public void removerPrato(int idPrato) {
+        cardapio.removeIf(p -> p.getIdPrato() == idPrato);
+    }
+
+    public Prato buscarPratoPorNome(String nome) {
+        for (Prato p : cardapio) {
+            if (p.getNome().equalsIgnoreCase(nome)) {
+                return p;
+            }
+        }
+        return null;
     }
 
 }
