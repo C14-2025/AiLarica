@@ -7,43 +7,35 @@ import java.util.Optional;
 @Service
 public class RestauranteService {
 
-    private final RestauranteDAO restauranteDAO = new RestauranteDAO();
-    private final PratoDAO pratoDAO = new PratoDAO(); // ✅ novo DAO para lidar com pratos
+    private final RestauranteDAO restauranteDAO;
+
+    public RestauranteService(RestauranteDAO restauranteDAO) {
+        this.restauranteDAO = restauranteDAO;
+    }
 
     // Criar novo restaurante
     public Restaurante criar(Restaurante novo) {
         restauranteDAO.criar(novo);
-
-        // Se o restaurante tiver pratos, salva todos
-        if (novo.getCardapio() != null) {
-            for (Prato prato : novo.getCardapio()) {
-                prato.setIdRestaurante(novo.getIdRestaurante());
-                pratoDAO.criar(prato, novo.getIdRestaurante());
-            }
-        }
-
+        // O ID do restaurante é setado dentro do DAO, mas o objeto 'novo'
+        // que é retornado aqui não está sendo atualizado com o ID gerado.
+        // Como o DAO já lida com a persistência dos pratos, vamos apenas
+        // garantir que o objeto retornado tenha o ID correto.
+        // No entanto, o método 'criar' do DAO não retorna o objeto atualizado.
+        // Vamos assumir que o DAO atualiza o objeto passado por referência,
+        // o que é uma prática ruim, mas é o que o código original sugere.
+        // A melhor solução seria refatorar o DAO para retornar o ID ou o objeto.
+        // Como o DAO já atualiza o objeto, vamos apenas retornar.
         return novo;
     }
 
     // Listar todos (incluindo pratos)
     public List<Restaurante> listarTodos() {
-        List<Restaurante> restaurantes = restauranteDAO.listarTodos();
-
-        // ✅ Para cada restaurante, busca o cardápio correspondente
-        for (Restaurante r : restaurantes) {
-            r.setCardapio(pratoDAO.listarPorRestaurante(r.getIdRestaurante()));
-        }
-
-        return restaurantes;
+        return restauranteDAO.listarTodos();
     }
 
     // Buscar por id
     public Optional<Restaurante> buscarPorId(int id) {
-        Restaurante r = restauranteDAO.buscarPorId(id);
-        if (r != null) {
-            r.setCardapio(pratoDAO.listarPorRestaurante(id));
-        }
-        return Optional.ofNullable(r);
+        return Optional.ofNullable(restauranteDAO.buscarPorId(id));
     }
 
     // Atualizar
@@ -52,16 +44,6 @@ public class RestauranteService {
         if (existente != null) {
             atualizado.setIdRestaurante(id);
             restauranteDAO.atualizar(atualizado);
-
-            // Atualiza os pratos também
-            pratoDAO.deletarPorRestaurante(id);
-            if (atualizado.getCardapio() != null) {
-                for (Prato p : atualizado.getCardapio()) {
-                    p.setIdRestaurante(id);
-                    pratoDAO.criar(p, atualizado.getIdRestaurante());
-                }
-            }
-
             return Optional.of(atualizado);
         }
         return Optional.empty();
@@ -71,8 +53,7 @@ public class RestauranteService {
     public boolean deletar(int id) {
         Restaurante existente = restauranteDAO.buscarPorId(id);
         if (existente != null) {
-            pratoDAO.deletarPorRestaurante(id);
-            restauranteDAO.deletar(id);
+            restauranteDAO.deletar(id); // O DAO já lida com a exclusão dos pratos
             return true;
         }
         return false;
@@ -80,8 +61,6 @@ public class RestauranteService {
 
     // Ativar / Desativar / Alternar (sem mudanças)
     public boolean atualizarStatus(int id, boolean status) {
-        Restaurante r = restauranteDAO.buscarPorId(id);
-        if (r == null) return false;
         return restauranteDAO.atualizarStatus(id, status);
     }
 

@@ -1,6 +1,6 @@
 package br.inatel.ailarica.Restaurantes;
 
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -13,8 +13,11 @@ import java.sql.*;
 @RequestMapping("/restaurantes")
 public class RestauranteController {
 
-    @Autowired
-    private RestauranteService service;
+    private final RestauranteService service;
+
+    public RestauranteController(RestauranteService service) {
+        this.service = service;
+    }
 
     @GetMapping
     public List<Restaurante> listarTodos() {
@@ -48,13 +51,12 @@ public class RestauranteController {
         return ResponseEntity.notFound().build();
     }
 
-    @Autowired
-    private RestauranteService restauranteService;
+
 
     // ✅ Ativar restaurante
     @PutMapping("/{id}/ativar")
     public ResponseEntity<String> ativarRestaurante(@PathVariable int id) {
-        boolean sucesso = restauranteService.atualizarStatus(id, true);
+        boolean sucesso = service.atualizarStatus(id, true);
         if (sucesso) {
             return ResponseEntity.ok("✅ Restaurante ativado com sucesso!");
         }
@@ -64,7 +66,7 @@ public class RestauranteController {
     // 🚫 Desativar restaurante
     @PutMapping("/{id}/desativar")
     public ResponseEntity<String> desativarRestaurante(@PathVariable int id) {
-        boolean sucesso = restauranteService.atualizarStatus(id, false);
+        boolean sucesso = service.atualizarStatus(id, false);
         if (sucesso) {
             return ResponseEntity.ok("🚫 Restaurante desativado com sucesso!");
         }

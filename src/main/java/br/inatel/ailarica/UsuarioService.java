@@ -1,11 +1,17 @@
 package br.inatel.ailarica;
 
-import java.io.*;
+import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+@Service
 public class UsuarioService {
-    public final String ARQUIVO = "usuarios.txt";
+
+    private final UsuarioDAO usuarioDAO;
+
+    public UsuarioService(UsuarioDAO usuarioDAO) {
+        this.usuarioDAO = usuarioDAO;
+    }
 
     // Validações de email e senha
     private boolean isEmailValid(String email) {
@@ -50,20 +56,11 @@ public class UsuarioService {
             return false;
         }
 
-        List<Usuario> usuarios = carregarUsuarios();
-
-        for (Usuario u : usuarios) {
-            if (u.getEmail().equalsIgnoreCase(email)) {
-                return false; // já existe
-            }
+        if (usuarioDAO.buscarPorEmail(email).isPresent()) {
+            return false; // já existe
         }
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARQUIVO, true))) {
-            writer.write(new Usuario(nome, email, senha).toString());
-            writer.newLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        usuarioDAO.criar(new Usuario(nome, email, senha));
         return true;
     }
 
@@ -79,20 +76,11 @@ public class UsuarioService {
             return false;
         }
 
-        List<Usuario> usuarios = carregarUsuarios();
-
-        for (Usuario u : usuarios) {
-            if (u.getEmail().equalsIgnoreCase(usuario.getEmail())) {
-                return false; // já existe
-            }
+        if (usuarioDAO.buscarPorEmail(usuario.getEmail()).isPresent()) {
+            return false; // já existe
         }
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARQUIVO, true))) {
-            writer.write(usuario.toString());
-            writer.newLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        usuarioDAO.criar(usuario);
         return true;
     }
 
@@ -102,72 +90,31 @@ public class UsuarioService {
             return false; // bloqueia atualização se não cumprir regras
         }
 
-        List<Usuario> usuarios = carregarUsuarios();
-        boolean atualizado = false;
-        for (Usuario u : usuarios) {
-            if (u.getEmail().equalsIgnoreCase(email) && u.getSenha().equals(senhaAntiga)) {
-                u.setSenha(novaSenha);
-                atualizado = true;
-                break;
-            }
-        }
-        if (atualizado) {
-            salvarUsuarios(usuarios);
-        }
-        return atualizado;
-    }
-
-    // Salvar usuários (mantido)
-    private void salvarUsuarios(List<Usuario> usuarios) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARQUIVO, false))) { // sobrescreve
-            for (Usuario u : usuarios) {
-                writer.write(u.toString());
-                writer.newLine();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Atualização genérica (ex: confirmar email ou adicionar endereço)
-    public void atualizarUsuarios(List<Usuario> usuarios) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARQUIVO))) {
-            for (Usuario u : usuarios) {
-                writer.write(u.toString());
-                writer.newLine();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        return usuarioDAO.buscarPorEmail(email)
+                .filter(u -> u.getSenha().equals(senhaAntiga))
+                .map(u -> {
+                    u.setSenha(novaSenha);
+                    usuarioDAO.atualizar(u);
+                    return true;
+                })
+                .orElse(false);
     }
 
     // Login (só permite se confirmado)
     public Usuario login(String email, String senha) {
-        List<Usuario> usuarios = carregarUsuarios();
-        for (Usuario u : usuarios) {
-            if (u.getEmail().equalsIgnoreCase(email) &&
-                    u.getSenha().equals(senha) &&
-                    u.isConfirmado()) {
-                return u;
-            }
-        }
-        return null;
+        return usuarioDAO.buscarPorEmail(email)
+                .filter(u -> u.getSenha().equals(senha) && u.isConfirmado())
+                .orElse(null);
     }
 
-    // Carregar lista de usuários do arquivo
-    public List<Usuario> carregarUsuarios() {
-        List<Usuario> usuarios = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(ARQUIVO))) {
-            String linha;
-            while ((linha = reader.readLine()) != null) {
-                Usuario u = Usuario.fromString(linha);
-                if (u != null) {
-                    usuarios.add(u);
-                }
-            }
-        } catch (IOException e) {
-            // arquivo pode não existir ainda, ignorar
-        }
-        return usuarios;
+    // Método auxiliar para confirmar email (necessário para o fluxo de cadastro)
+    public boolean confirmarEmail(String email) {
+        return usuarioDAO.buscarPorEmail(email)
+                .map(u -> {
+                    u.confirmar();
+                    usuarioDAO.atualizar(u);
+                    return true;
+                })
+                .orElse(false);
     }
 }

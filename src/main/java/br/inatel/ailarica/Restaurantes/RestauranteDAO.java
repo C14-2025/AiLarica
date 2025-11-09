@@ -1,9 +1,11 @@
 package br.inatel.ailarica.Restaurantes;
 
 import java.sql.*;
+import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.List;
 
+@Repository
 public class RestauranteDAO {
 
     private static final String URL = "jdbc:mysql://localhost:3306/ailarica_db";
@@ -35,6 +37,7 @@ public class RestauranteDAO {
             int idRestaurante = 0;
             if (generatedKeys.next()) {
                 idRestaurante = generatedKeys.getInt(1);
+                restaurante.setIdRestaurante(idRestaurante); // ✅ Atualiza o ID no objeto
             }
 
             // Insere pratos (se houver)
