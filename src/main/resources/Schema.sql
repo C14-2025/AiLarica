@@ -1,25 +1,28 @@
+-- Ativar suporte a chaves estrangeiras
+PRAGMA foreign_keys = ON;
+
 -- Criação da tabela restaurante
 CREATE TABLE IF NOT EXISTS restaurante (
-                                           idRestaurante INT AUTO_INCREMENT PRIMARY KEY,
-                                           nome VARCHAR(255) NOT NULL,
-    descricao TEXT,
-    endereco VARCHAR(255),
-    telefone VARCHAR(20),
-    avaliacao FLOAT DEFAULT 0.0,
-    ativo BOOLEAN DEFAULT TRUE,
-    fotoPerfil VARCHAR(255)
-    );
+                                           idRestaurante INTEGER PRIMARY KEY AUTOINCREMENT,
+                                           nome TEXT NOT NULL,
+                                           descricao TEXT,
+                                           endereco TEXT,
+                                           telefone TEXT,
+                                           avaliacao REAL DEFAULT 0.0,
+                                           ativo INTEGER DEFAULT 1,  -- 1 = TRUE, 0 = FALSE
+                                           fotoPerfil TEXT
+);
 
 -- Criação da tabela prato
 CREATE TABLE IF NOT EXISTS prato (
-                                     idPrato INT AUTO_INCREMENT PRIMARY KEY,
-                                     nome VARCHAR(255) NOT NULL,
-    descricao TEXT,
-    preco DECIMAL(10, 2) NOT NULL,
-    disponivel BOOLEAN DEFAULT TRUE,
-    foto VARCHAR(255),
-    idRestaurante INT NOT NULL,
-    FOREIGN KEY (idRestaurante) REFERENCES restaurante(idRestaurante) ON DELETE CASCADE
+                                     idPrato INTEGER PRIMARY KEY AUTOINCREMENT,
+                                     nome TEXT NOT NULL,
+                                     descricao TEXT,
+                                     preco REAL NOT NULL,
+                                     isponivel INTEGER DEFAULT 1,  -- 1 = TRUE, 0 = FALSE
+                                     foto TEXT,
+                                     idRestaurante INTEGER NOT NULL,
+                                     FOREIGN KEY (idRestaurante) REFERENCES restaurante(idRestaurante) ON DELETE CASCADE
     );
 
 -- Criação da tabela restaurante_horario (para armazenar os horários de funcionamento)
