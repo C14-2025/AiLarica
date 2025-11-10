@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Usuario {
+    private int id;
     private String nome;
     private String email;
     private String senha;
@@ -49,25 +50,11 @@ public class Usuario {
         return enderecos;
     }
 
-    @Override
-    public String toString() {
-        return nome + ";" + email + ";" + senha + ";" + confirmado + ";" + String.join(",", enderecos);
+    public int getId() {
+        return id;
     }
 
-    public static Usuario fromString(String linha) {
-        String[] partes = linha.split(";");
-        if (partes.length >= 4) {
-            Usuario u = new Usuario(partes[0], partes[1], partes[2]);
-            u.confirmado = Boolean.parseBoolean(partes[3]);
-
-            if (partes.length == 5 && !partes[4].isEmpty()) {
-                String[] enderecos = partes[4].split(",");
-                for (String e : enderecos) {
-                    u.adicionarEndereco(e);
-                }
-            }
-            return u;
-        }
-        return null;
+    public void setId(int id) {
+        this.id = id;
     }
 }
