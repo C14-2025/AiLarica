@@ -1,195 +1,160 @@
 package br.inatel.ailarica.Restaurantes;
 
-import java.sql.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import java.util.ArrayList;
+
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.List;
+import java.util.Objects;
 
 @Repository
 public class RestauranteDAO {
 
-    private static final String URL = "jdbc:mysql://localhost:3306/ailarica_db";
-    private static final String USER = "root";
-    private static final String PASSWORD = "minecraft123321";
+    private final JdbcTemplate jdbcTemplate;
 
-    private Connection conectar() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
-    }
+    private final PratoDAO pratoDAO; // Injeta o PratoDAO
+    private final ObjectMapper objectMapper; // Para serializar/desserializar horários
+    private final RowMapper<Restaurante> restauranteRowMapper; // RowMapper completo para Restaurante
+
+    @Autowired
+    public RestauranteDAO(JdbcTemplate jdbcTemplate, PratoDAO pratoDAO) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.pratoDAO = pratoDAO;
+        this.objectMapper = new ObjectMapper(); // Instancia o conversor JSON
+
+        // Inicializa o RowMapper aqui, onde objectMapper e pratoDAO já estão inicializados
+        this.restauranteRowMapper = (rs, rowNum) -> {
+            Restaurante r = new Restaurante();
+            r.setIdRestaurante(rs.getInt("idRestaurante"));
+            r.setNome(rs.getString("nome"));
+            r.setDescricao(rs.getString("descricao"));
+            r.setEndereco(rs.getString("endereco"));
+            r.setTelefone(rs.getString("telefone"));
+            r.setAvaliacao(rs.getFloat("avaliacao"));
+            r.setAtivo(rs.getBoolean("ativo"));
+            r.setFotoPerfil(rs.getString("fotoPerfil"));
+
+            // 1. Desserializa os horários a partir da coluna JSON
+            try {
+                String horariosJson = rs.getString("horarios_json");
+                if (horariosJson != null && !horariosJson.isEmpty()) {
+                    RestauranteHorario horarios = objectMapper.readValue(horariosJson, RestauranteHorario.class);
+                    r.setHorarios(horarios);
+                }
+            } catch (JsonProcessingException e) {
+                e.printStackTrace(); // Tratar erro de desserialização
+            }
+
+            // 2. Busca o cardápio usando o PratoDAO
+            r.setCardapio(pratoDAO.listarPorRestaurante(r.getIdRestaurante()));
+
+            return r;
+        };
+    } // Fecha o construtor
 
     // CREATE — cria restaurante e adiciona seus pratos
     public void criar(Restaurante restaurante) {
-        String sql = "INSERT INTO restaurante (nome, descricao, endereco, telefone, avaliacao, ativo, fotoPerfil) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO restaurante (nome, descricao, endereco, telefone, avaliacao, ativo, fotoPerfil, horarios_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        KeyHolder keyHolder = new GeneratedKeyHolder(); // Para pegar o ID gerado
 
-        try (Connection conn = conectar();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try {
+            // Converte o objeto de horários para uma string JSON
+            String horariosJson = objectMapper.writeValueAsString(restaurante.getHorarios());
 
-            stmt.setString(1, restaurante.getNome());
-            stmt.setString(2, restaurante.getDescricao());
-            stmt.setString(3, restaurante.getEndereco());
-            stmt.setString(4, restaurante.getTelefone());
-            stmt.setFloat(5, restaurante.getAvaliacao());
-            stmt.setBoolean(6, restaurante.isAtivo());
-            stmt.setString(7, restaurante.getFotoPerfil());
-            stmt.executeUpdate();
+            jdbcTemplate.update(connection -> {
+                PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+                ps.setString(1, restaurante.getNome());
+                ps.setString(2, restaurante.getDescricao());
+                ps.setString(3, restaurante.getEndereco());
+                ps.setString(4, restaurante.getTelefone());
+                ps.setFloat(5, restaurante.getAvaliacao());
+                ps.setBoolean(6, restaurante.isAtivo());
+                ps.setString(7, restaurante.getFotoPerfil());
+                ps.setString(8, horariosJson);
+                return ps;
+            }, keyHolder);
 
-            // Pega o ID gerado automaticamente
-            ResultSet generatedKeys = stmt.getGeneratedKeys();
-            int idRestaurante = 0;
-            if (generatedKeys.next()) {
-                idRestaurante = generatedKeys.getInt(1);
-                restaurante.setIdRestaurante(idRestaurante); // ✅ Atualiza o ID no objeto
-            }
+            // Pega o ID gerado e seta no objeto
+            int idRestaurante = Objects.requireNonNull(keyHolder.getKey()).intValue();
+            restaurante.setIdRestaurante(idRestaurante);
 
-            // Insere pratos (se houver)
+            // Insere pratos (se houver) usando o PratoDAO
             if (restaurante.getCardapio() != null && !restaurante.getCardapio().isEmpty()) {
-                PratoDAO pratoDAO = new PratoDAO();
                 for (Prato prato : restaurante.getCardapio()) {
-                    pratoDAO.inserirPrato(prato, idRestaurante);
+                    pratoDAO.criar(prato, idRestaurante);
                 }
             }
-
             System.out.println("✅ Restaurante e cardápio inseridos com sucesso!");
 
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     // READ — lista todos os restaurantes com cardápio
     public List<Restaurante> listarTodos() {
-        List<Restaurante> restaurantes = new ArrayList<>();
         String sql = "SELECT * FROM restaurante";
-
-        try (Connection conn = conectar();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            PratoDAO pratoDAO = new PratoDAO();
-
-            while (rs.next()) {
-                Restaurante r = new Restaurante();
-                r.setIdRestaurante(rs.getInt("idRestaurante"));
-                r.setNome(rs.getString("nome"));
-                r.setDescricao(rs.getString("descricao"));
-                r.setEndereco(rs.getString("endereco"));
-                r.setTelefone(rs.getString("telefone"));
-                r.setAvaliacao(rs.getFloat("avaliacao"));
-                r.setAtivo(rs.getBoolean("ativo"));
-                r.setFotoPerfil(rs.getString("fotoPerfil"));
-
-                // Carrega cardápio do restaurante
-                r.setCardapio(pratoDAO.listarPorRestaurante(r.getIdRestaurante()));
-
-                restaurantes.add(r);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return restaurantes;
+        return jdbcTemplate.query(sql, restauranteRowMapper);
     }
 
     // READ — busca restaurante por ID com cardápio
     public Restaurante buscarPorId(int id) {
         String sql = "SELECT * FROM restaurante WHERE idRestaurante = ?";
-
-        try (Connection conn = conectar();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                Restaurante r = new Restaurante();
-                r.setIdRestaurante(rs.getInt("idRestaurante"));
-                r.setNome(rs.getString("nome"));
-                r.setDescricao(rs.getString("descricao"));
-                r.setEndereco(rs.getString("endereco"));
-                r.setTelefone(rs.getString("telefone"));
-                r.setAvaliacao(rs.getFloat("avaliacao"));
-                r.setAtivo(rs.getBoolean("ativo"));
-                r.setFotoPerfil(rs.getString("fotoPerfil"));
-
-                // Carrega pratos do restaurante
-                PratoDAO pratoDAO = new PratoDAO();
-                r.setCardapio(pratoDAO.listarPorRestaurante(r.getIdRestaurante()));
-
-                return r;
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
+        try {
+            return jdbcTemplate.queryForObject(sql, restauranteRowMapper, id);
+        } catch (Exception e) {
+            // Retorna null se não encontrar (EmptyResultDataAccessException)
+            return null;
         }
-
-        return null;
     }
 
     // UPDATE — atualiza dados do restaurante (não mexe nos pratos)
     public void atualizar(Restaurante restaurante) {
-        String sql = "UPDATE restaurante SET nome=?, descricao=?, endereco=?, telefone=?, avaliacao=?, ativo=?, fotoPerfil=? WHERE idRestaurante=?";
+        String sql = "UPDATE restaurante SET nome=?, descricao=?, endereco=?, telefone=?, avaliacao=?, ativo=?, fotoPerfil=?, horarios_json=? WHERE idRestaurante=?";
+        try {
+            // Converte horários para JSON
+            String horariosJson = objectMapper.writeValueAsString(restaurante.getHorarios());
 
-        try (Connection conn = conectar();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            jdbcTemplate.update(sql,
+                    restaurante.getNome(),
+                    restaurante.getDescricao(),
+                    restaurante.getEndereco(),
+                    restaurante.getTelefone(),
+                    restaurante.getAvaliacao(),
+                    restaurante.isAtivo(),
+                    restaurante.getFotoPerfil(),
+                    horariosJson,
+                    restaurante.getIdRestaurante());
 
-            stmt.setString(1, restaurante.getNome());
-            stmt.setString(2, restaurante.getDescricao());
-            stmt.setString(3, restaurante.getEndereco());
-            stmt.setString(4, restaurante.getTelefone());
-            stmt.setFloat(5, restaurante.getAvaliacao());
-            stmt.setBoolean(6, restaurante.isAtivo());
-            stmt.setString(7, restaurante.getFotoPerfil());
-            stmt.setInt(8, restaurante.getIdRestaurante());
-
-            stmt.executeUpdate();
             System.out.println("✅ Restaurante atualizado com sucesso!");
-
-        } catch (SQLException e) {
+        } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
     }
 
-    // DELETE — remove restaurante e seus pratos associados
+    // DELETE — remove restaurante.
+    // (Seu Schema.sql deve ter "ON DELETE CASCADE" na tabela 'prato'
+    // para que isso funcione e delete os pratos juntos)
     public void deletar(int id) {
-        try (Connection conn = conectar()) {
-            conn.setAutoCommit(false); // Inicia transação
+        String sqlRestaurante = "DELETE FROM restaurante WHERE idRestaurante = ?";
 
-            // 1. Deleta pratos do restaurante
-            String sqlPratos = "DELETE FROM prato WHERE idRestaurante = ?";
-            try (PreparedStatement stmtPratos = conn.prepareStatement(sqlPratos)) {
-                stmtPratos.setInt(1, id);
-                stmtPratos.executeUpdate();
-            }
+        // Se o "ON DELETE CASCADE" estiver no Schema.sql, você só precisa disso:
+        jdbcTemplate.update(sqlRestaurante, id);
 
-            // 2. Deleta o restaurante
-            String sqlRestaurante = "DELETE FROM restaurante WHERE idRestaurante = ?";
-            try (PreparedStatement stmtRest = conn.prepareStatement(sqlRestaurante)) {
-                stmtRest.setInt(1, id);
-                stmtRest.executeUpdate();
-            }
-
-            conn.commit(); // Confirma as duas operações
-            System.out.println("❌ Restaurante e seus pratos deletados com sucesso!");
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        System.out.println("❌ Restaurante deletado com sucesso (e pratos em cascata)!");
     }
 
     // ALTERAR STATUS — ativa ou desativa um restaurante
     public boolean atualizarStatus(int id, boolean ativo) {
         String sql = "UPDATE restaurante SET ativo = ? WHERE idRestaurante = ?";
-
-        try (Connection conn = conectar();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setBoolean(1, ativo);
-            stmt.setInt(2, id);
-            int rowsAffected = stmt.executeUpdate();
-
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+        int rowsAffected = jdbcTemplate.update(sql, ativo, id);
+        return rowsAffected > 0;
     }
 }
