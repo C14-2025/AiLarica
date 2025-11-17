@@ -15,17 +15,13 @@ public class RestauranteService {
 
     // Criar novo restaurante
     public Restaurante criar(Restaurante novo) {
-        restauranteDAO.criar(novo);
-        // O ID do restaurante é setado dentro do DAO, mas o objeto 'novo'
-        // que é retornado aqui não está sendo atualizado com o ID gerado.
-        // Como o DAO já lida com a persistência dos pratos, vamos apenas
-        // garantir que o objeto retornado tenha o ID correto.
-        // No entanto, o método 'criar' do DAO não retorna o objeto atualizado.
-        // Vamos assumir que o DAO atualiza o objeto passado por referência,
-        // o que é uma prática ruim, mas é o que o código original sugere.
-        // A melhor solução seria refatorar o DAO para retornar o ID ou o objeto.
-        // Como o DAO já atualiza o objeto, vamos apenas retornar.
-        return novo;
+        // 1. O método 'restauranteDAO.criar()' não é mais 'void'.
+        //    Ele retorna o objeto 'Restaurante' atualizado (com o ID).
+        //    Nós precisamos capturar esse retorno.
+        Restaurante restauranteCriado = restauranteDAO.criar(novo);
+
+        // 2. Retorna o objeto que o DAO acabou de criar e atualizar.
+        return restauranteCriado;
     }
 
     // Listar todos (incluindo pratos)

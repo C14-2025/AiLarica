@@ -12,7 +12,7 @@ public class RestauranteHorario {
             "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"
     };
 
-    // Construtor vazio
+    // Construtor vazio (Correto! O Jackson precisa disso)
     public RestauranteHorario() {
         // Inicializa arrays com 0
     }
@@ -78,5 +78,24 @@ public class RestauranteHorario {
                     intToString(horariosAbertura[i]) + " - " +
                     intToString(horariosFechamento[i]));
         }
+    }
+
+    // --- ⬇️ EDIÇÃO CORRETA ADICIONADA AQUI ⬇️ ---
+    // Getters e Setters públicos para os arrays, necessários para o Jackson
+
+    public int[] getHorariosAbertura() {
+        return horariosAbertura;
+    }
+
+    public void setHorariosAbertura(int[] horariosAbertura) {
+        this.horariosAbertura = horariosAbertura;
+    }
+
+    public int[] getHorariosFechamento() {
+        return horariosFechamento;
+    }
+
+    public void setHorariosFechamento(int[] horariosFechamento) {
+        this.horariosFechamento = horariosFechamento;
     }
 }

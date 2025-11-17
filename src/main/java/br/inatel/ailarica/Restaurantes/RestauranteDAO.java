@@ -60,7 +60,7 @@ public class RestauranteDAO {
     } // Fecha o construtor
 
     // CREATE — cria restaurante e adiciona seus pratos
-    public void criar(Restaurante restaurante) {
+    public Restaurante criar(Restaurante restaurante) {
         String sql = "INSERT INTO restaurante (nome, descricao, endereco, telefone, avaliacao, ativo, fotoPerfil, horarios_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder(); // Para pegar o ID gerado
 
@@ -93,8 +93,12 @@ public class RestauranteDAO {
             }
             System.out.println("✅ Restaurante e cardápio inseridos com sucesso!");
 
+            // 2. Adicione o 'return' para enviar o objeto atualizado de volta
+            return restaurante;
+
         } catch (Exception e) {
             e.printStackTrace();
+            return null; // Retorna null em caso de erro
         }
     }
 
