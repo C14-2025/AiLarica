@@ -1,65 +1,89 @@
 package br.inatel.ailarica;
 
-import org.jetbrains.annotations.NotNull;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import java.util.ArrayList;
+
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
-/**
- * DAO mockado para a entidade Usuario.
- * A persistência é feita em memória (List<Usuario>) para focar
- * na implementação do CRUD de Restaurante, conforme solicitado.
- */
-@Repository
+@Repository // Agora é um repositório de DB real
 public class UsuarioDAO {
 
-    private final List<Usuario> usuarios = new ArrayList<>();
-    private int nextId = 1;
+    private final JdbcTemplate jdbcTemplate;
 
-    public UsuarioDAO() {
-        // Mock de alguns usuários para testes
-        Usuario u1 = new Usuario("Mock User 1", "mock1@email.com", "Senha@123");
-        u1.confirmar();
-        u1.setId(nextId++);
-        usuarios.add(u1);
-
-        Usuario u2 = new Usuario("Mock User 2", "mock2@email.com", "Senha@456");
-        u2.setId(nextId++);
-        usuarios.add(u2);
+    public UsuarioDAO(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
-    public void criar(@NotNull Usuario usuario) {
-        usuario.setId(nextId++);
-        usuarios.add(usuario);
+    // RowMapper para traduzir o banco para o objeto Usuario
+    private final RowMapper<Usuario> usuarioRowMapper = (rs, rowNum) -> {
+        Usuario u = new Usuario();
+        u.setId(rs.getInt("idUsuario"));
+        u.setNome(rs.getString("nome"));
+        u.setEmail(rs.getString("email"));
+        u.setSenha(rs.getString("senha"));
+        u.setEndereco(rs.getString("endereco"));
+        u.setConfirmado(rs.getInt("confirmado") == 1);
+        return u;
+    };
+
+    // Criar
+    public void criar(Usuario usuario) {
+        String sql = "INSERT INTO usuario (nome, email, senha, endereco, confirmado) VALUES (?, ?, ?, ?, ?)";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, usuario.getNome());
+            ps.setString(2, usuario.getEmail());
+            ps.setString(3, usuario.getSenha());
+            ps.setString(4, usuario.getEndereco());
+            ps.setBoolean(5, usuario.isConfirmado());
+            return ps;
+        }, keyHolder);
+
+        usuario.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
     }
 
+    // Buscar por Email
     public Optional<Usuario> buscarPorEmail(String email) {
-        return usuarios.stream()
-                .filter(u -> u.getEmail().equalsIgnoreCase(email))
-                .findFirst();
-    }
-
-    public Optional<Usuario> buscarPorId(int id) {
-        return usuarios.stream()
-                .filter(u -> u.getId() == id)
-                .findFirst();
-    }
-
-    public List<Usuario> listarTodos() {
-        return new ArrayList<>(usuarios);
-    }
-
-    public void atualizar(Usuario usuario) {
-        for (int i = 0; i < usuarios.size(); i++) {
-            if (usuarios.get(i).getId() == usuario.getId()) {
-                usuarios.set(i, usuario);
-                return;
-            }
+        String sql = "SELECT * FROM usuario WHERE email = ?";
+        try {
+            Usuario usuario = jdbcTemplate.queryForObject(sql, usuarioRowMapper, email);
+            return Optional.ofNullable(usuario);
+        } catch (Exception e) {
+            return Optional.empty(); // Não encontrado
         }
     }
 
-    public boolean deletar(int id) {
-        return usuarios.removeIf(u -> u.getId() == id);
+    // Buscar por ID
+    public Optional<Usuario> buscarPorId(int id) {
+        String sql = "SELECT * FROM usuario WHERE idUsuario = ?";
+        try {
+            Usuario usuario = jdbcTemplate.queryForObject(sql, usuarioRowMapper, id);
+            return Optional.ofNullable(usuario);
+        } catch (Exception e) {
+            return Optional.empty(); // Não encontrado
+        }
     }
+
+    // Atualizar (Necessário para o service de "confirmarEmail" e "atualizarSenha")
+    public void atualizar(Usuario usuario) {
+        String sql = "UPDATE usuario SET nome = ?, email = ?, senha = ?, endereco = ?, confirmado = ? WHERE idUsuario = ?";
+        jdbcTemplate.update(sql,
+                usuario.getNome(),
+                usuario.getEmail(),
+                usuario.getSenha(),
+                usuario.getEndereco(),
+                usuario.isConfirmado(),
+                usuario.getId());
+    }
+
+    // (Você pode adicionar ListarTodos e Deletar se precisar)
 }

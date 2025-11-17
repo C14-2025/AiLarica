@@ -1,36 +1,53 @@
 package br.inatel.ailarica;
 
-import java.util.ArrayList;
-import java.util.List;
+// (Não precisamos de List ou ArrayList aqui)
 
 public class Usuario {
     private int id;
     private String nome;
     private String email;
     private String senha;
-    private boolean confirmado; // novo campo
-    private List<String> enderecos = new ArrayList<>();
+    private boolean confirmado;
+    private String endereco; // Perfeito
 
-    public Usuario(String nome, String email, String senha) {
+    // 1. ADIÇÃO: Construtor vazio (obrigatório para o RowMapper do DAO)
+    public Usuario() {
+    }
+
+    // 2. ALTERAÇÃO: Construtor principal (agora inclui 'endereco')
+    public Usuario(String nome, String email, String senha, String endereco) {
         this.nome = nome;
         this.email = email;
         this.senha = senha;
+        this.endereco = endereco; // Agora o endereço é salvo
         this.confirmado = false; // por padrão, não confirmado
     }
 
+    // --- Seus Getters e Setters (Estão ótimos!) ---
+
     public String getNome() {
         return nome;
+    }
+
+    // Adicionando o setNome que o DAO vai precisar
+    public void setNome(String nome) {
+        this.nome = nome;
     }
 
     public String getEmail() {
         return email;
     }
 
+    // Adicionando o setEmail que o DAO vai precisar
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public String getSenha() {
         return senha;
     }
 
-    public void setSenha(String senha) { // mantido de Sofia Groke
+    public void setSenha(String senha) {
         this.senha = senha;
     }
 
@@ -38,16 +55,21 @@ public class Usuario {
         return confirmado;
     }
 
+    // Adicionando o setConfirmado que o DAO vai precisar
+    public void setConfirmado(boolean confirmado) {
+        this.confirmado = confirmado;
+    }
+
     public void confirmar() {
         this.confirmado = true;
     }
 
-    public void adicionarEndereco(String endereco) {
-        enderecos.add(endereco);
+    public String getEndereco() {
+        return endereco;
     }
 
-    public List<String> getEnderecos() {
-        return enderecos;
+    public void setEndereco(String endereco) {
+        this.endereco = endereco;
     }
 
     public int getId() {
