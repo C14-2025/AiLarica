@@ -60,7 +60,7 @@ public class UsuarioService {
             return false; // já existe
         }
 
-        usuarioDAO.criar(new Usuario(nome, email, senha));
+        usuarioDAO.criar(new Usuario(nome, email, senha, null));
         return true;
     }
 

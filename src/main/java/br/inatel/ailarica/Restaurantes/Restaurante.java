@@ -1,20 +1,15 @@
 package br.inatel.ailarica.Restaurantes;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+// Removemos as importações do Lombok
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
-@Setter
-@ToString
-
+// Não usamos mais @Getter, @Setter, @ToString
 public class Restaurante {
     private int idRestaurante;
     private String nome;
     private String descricao;
-    private RestauranteHorario horarios; // Nova forma de armazenar horários
+    private RestauranteHorario horarios;
     private String endereco;
     private String telefone;
     private float avaliacao;
@@ -22,7 +17,12 @@ public class Restaurante {
     private String fotoPerfil;
     private List<Prato> cardapio = new ArrayList<>();
 
+    // Construtor padrão (que o Jackson usa)
+    public Restaurante() {
+        // construtor padrão vazio
+    }
 
+    // Construtor completo (que o código antigo usava)
     public Restaurante(int idRestaurante, String nome, String descricao,
                        RestauranteHorario horarios, String endereco,
                        String telefone, boolean ativo, String fotoPerfil,
@@ -39,13 +39,7 @@ public class Restaurante {
         this.avaliacao = 0.0f; // valor padrão
     }
 
-    // Construtor
-    public Restaurante() {
-        // construtor padrão vazio
-    }
-
-
-
+    // --- Métodos antigos ---
     public void setHora() {
         this.horarios.setHorarios(); // apenas chama o método
     }
@@ -75,5 +69,85 @@ public class Restaurante {
         return null;
     }
 
-}
+    // --- GETTERS E SETTERS MANUAIS (O que vai corrigir o erro 400) ---
 
+    public int getIdRestaurante() {
+        return idRestaurante;
+    }
+
+    public void setIdRestaurante(int idRestaurante) {
+        this.idRestaurante = idRestaurante;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
+
+    public RestauranteHorario getHorarios() {
+        return horarios;
+    }
+
+    public void setHorarios(RestauranteHorario horarios) {
+        this.horarios = horarios;
+    }
+
+    public String getEndereco() {
+        return endereco;
+    }
+
+    public void setEndereco(String endereco) {
+        this.endereco = endereco;
+    }
+
+    public String getTelefone() {
+        return telefone;
+    }
+
+    public void setTelefone(String telefone) {
+        this.telefone = telefone;
+    }
+
+    public float getAvaliacao() {
+        return avaliacao;
+    }
+
+    public void setAvaliacao(float avaliacao) {
+        this.avaliacao = avaliacao;
+    }
+
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
+    }
+
+    public String getFotoPerfil() {
+        return fotoPerfil;
+    }
+
+    public void setFotoPerfil(String fotoPerfil) {
+        this.fotoPerfil = fotoPerfil;
+    }
+
+    public List<Prato> getCardapio() {
+        return cardapio;
+    }
+
+    public void setCardapio(List<Prato> cardapio) {
+        this.cardapio = cardapio;
+    }
+}
