@@ -30,12 +30,13 @@ public class UsuarioDAO {
         u.setSenha(rs.getString("senha"));
         u.setEndereco(rs.getString("endereco"));
         u.setConfirmado(rs.getInt("confirmado") == 1);
+        u.setTipo(rs.getString("tipo"));
         return u;
     };
 
     // Criar
     public void criar(Usuario usuario) {
-        String sql = "INSERT INTO usuario (nome, email, senha, endereco, confirmado) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO usuario (nome, email, senha, endereco, confirmado, tipo) VALUES (?, ?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
         jdbcTemplate.update(connection -> {
@@ -45,6 +46,7 @@ public class UsuarioDAO {
             ps.setString(3, usuario.getSenha());
             ps.setString(4, usuario.getEndereco());
             ps.setBoolean(5, usuario.isConfirmado());
+            ps.setString(6, usuario.getTipo() != null ? usuario.getTipo() : "USUARIO");
             return ps;
         }, keyHolder);
 
@@ -75,15 +77,26 @@ public class UsuarioDAO {
 
     // Atualizar (Necessário para o service de "confirmarEmail" e "atualizarSenha")
     public void atualizar(Usuario usuario) {
-        String sql = "UPDATE usuario SET nome = ?, email = ?, senha = ?, endereco = ?, confirmado = ? WHERE idUsuario = ?";
+        String sql = "UPDATE usuario SET nome = ?, email = ?, senha = ?, endereco = ?, confirmado = ?, tipo = ? WHERE idUsuario = ?";
         jdbcTemplate.update(sql,
                 usuario.getNome(),
                 usuario.getEmail(),
                 usuario.getSenha(),
                 usuario.getEndereco(),
                 usuario.isConfirmado(),
+                usuario.getTipo() != null ? usuario.getTipo() : "USUARIO",
                 usuario.getId());
     }
 
-    // (Você pode adicionar ListarTodos e Deletar se precisar)
+    // Listar todos os usuários
+    public List<Usuario> listarTodos() {
+        String sql = "SELECT * FROM usuario";
+        return jdbcTemplate.query(sql, usuarioRowMapper);
+    }
+
+    // Deletar usuário
+    public boolean deletar(int id) {
+        String sql = "DELETE FROM usuario WHERE idUsuario = ?";
+        return jdbcTemplate.update(sql, id) > 0;
+    }
 }

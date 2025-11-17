@@ -11,7 +11,9 @@ CREATE TABLE IF NOT EXISTS restaurante (
                                            avaliacao REAL DEFAULT 0.0,
                                            ativo INTEGER DEFAULT 1,
                                            fotoPerfil TEXT,
-                                           horarios_json TEXT
+                                           horarios_json TEXT,
+                                           email TEXT UNIQUE, -- NOVO: Email para autenticação
+                                           senha TEXT -- NOVO: Senha para autenticação
 );
 
 -- Criação da tabela prato (CORRIGIDA)
@@ -24,7 +26,7 @@ CREATE TABLE IF NOT EXISTS prato (
                                      foto TEXT,
                                      idRestaurante INTEGER NOT NULL,
                                      FOREIGN KEY (idRestaurante) REFERENCES restaurante(idRestaurante) ON DELETE CASCADE
-    );
+);
 
 CREATE TABLE IF NOT EXISTS usuario (
                                        idUsuario INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +34,8 @@ CREATE TABLE IF NOT EXISTS usuario (
                                        email TEXT NOT NULL UNIQUE,
                                        senha TEXT NOT NULL,
                                        endereco TEXT,
-                                       confirmado INTEGER DEFAULT 0 -- 0 = FALSE, 1 = TRUE
+                                       confirmado INTEGER DEFAULT 0, -- 0 = FALSE, 1 = TRUE
+                                       tipo TEXT DEFAULT 'USUARIO' -- NOVO: Tipo de usuário (USUARIO ou RESTAURANTE)
 );
 
 -- 1. Tabela "Cabeçalho" do Pedido
