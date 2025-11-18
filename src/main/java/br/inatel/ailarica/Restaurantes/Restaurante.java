@@ -16,6 +16,8 @@ public class Restaurante {
     private boolean ativo;
     private String fotoPerfil;
     private List<Prato> cardapio = new ArrayList<>();
+    private String email; // NOVO: Email para autenticação
+    private String senha; // NOVO: Senha para autenticação
 
     // Construtor padrão (que o Jackson usa)
     public Restaurante() {
@@ -149,5 +151,21 @@ public class Restaurante {
 
     public void setCardapio(List<Prato> cardapio) {
         this.cardapio = cardapio;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getSenha() {
+        return senha;
+    }
+
+    public void setSenha(String senha) {
+        this.senha = senha;
     }
 }
