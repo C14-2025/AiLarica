@@ -1,4 +1,4 @@
-package br.inatel.ailarica.Restaurantes;
+package br.inatel.ailarica.Pedidos;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;

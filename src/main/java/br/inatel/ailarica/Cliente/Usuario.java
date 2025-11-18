@@ -1,4 +1,4 @@
-package br.inatel.ailarica;
+package br.inatel.ailarica.Cliente;
 
 // (Não precisamos de List ou ArrayList aqui)
 

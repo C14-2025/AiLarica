@@ -1,4 +1,4 @@
-package br.inatel.ailarica.Restaurantes;
+package br.inatel.ailarica.Pedidos;
 
 import lombok.Getter;
 import lombok.Setter;
