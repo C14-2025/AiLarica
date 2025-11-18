@@ -1,4 +1,4 @@
-package br.inatel.ailarica.Restaurantes; // (ou seu pacote)
+package br.inatel.ailarica.Pedidos;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -6,11 +6,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-public class PedidoController {
+@RequestMapping("/restaurantes")
+public class RestaurantePedidoController {
 
     private final PedidoService pedidoService;
 
-    public PedidoController(PedidoService pedidoService) {
+    public RestaurantePedidoController(PedidoService pedidoService) {
         this.pedidoService = pedidoService;
     }
 
@@ -18,34 +19,34 @@ public class PedidoController {
      * Endpoint para a Funcionalidade 4: Restaurante vê seus pedidos ATIVOS
      * (O "Dogão do Jairo" vai chamar este endpoint para mostrar os "3 Pedidos")
      */
-    @GetMapping("/restaurantes/{id}/pedidos-ativos")
+    @GetMapping("/{id}/pedidos-ativos")
     public List<Pedido> getPedidosAtivosRestaurante(@PathVariable int id) {
         return pedidoService.listarPedidosAtivosDoRestaurante(id);
+    }
+
+    /**
+     * Endpoint para o RESTAURANTE ver todos os seus pedidos
+     */
+    @GetMapping("/{id}/pedidos")
+    public List<Pedido> getPedidosRestaurante(@PathVariable int id) {
+        return pedidoService.listarPedidosDoRestaurante(id);
     }
 
     /**
      * Endpoint para a Funcionalidade 5: Restaurante atualiza o status do pedido
      * (O "Dogão do Jairo" chama isso ao clicar em "saiu para entrega")
      */
-    @PutMapping("/pedidos/{id}/status")
+    @PutMapping("/{idRestaurante}/pedidos/{idPedido}/status")
     public ResponseEntity<String> atualizarStatusPedido(
-            @PathVariable int id,
+            @PathVariable int idRestaurante,
+            @PathVariable int idPedido,
             @RequestBody StatusUpdateRequest request) {
 
-        boolean sucesso = pedidoService.atualizarStatus(id, request.getNovoStatus());
+        boolean sucesso = pedidoService.atualizarStatus(idPedido, request.getNovoStatus());
         if (sucesso) {
             return ResponseEntity.ok("Status do pedido atualizado para " + request.getNovoStatus());
         }
         return ResponseEntity.notFound().build();
-    }
-
-    /**
-     * Endpoint para o CLIENTE criar um novo pedido
-     */
-    @PostMapping("/pedidos")
-    public Pedido criarPedido(@RequestBody Pedido novoPedido) {
-        // O novoPedido vem com idUsuario, idRestaurante e a List<ItemPedido>
-        return pedidoService.criarPedido(novoPedido);
     }
 
     // --- Classe auxiliar para o corpo do JSON de atualização de status ---

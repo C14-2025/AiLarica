@@ -1,4 +1,4 @@
-package br.inatel.ailarica;
+package br.inatel.ailarica.Cliente;
 
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package br.inatel.ailarica.Restaurantes; // (ou seu pacote)
+package br.inatel.ailarica.Pedidos;
 
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
@@ -23,6 +23,18 @@ public class PedidoService {
 
     public List<Pedido> listarPedidosAtivosDoRestaurante(int idRestaurante) {
         List<Pedido> todosPedidos = pedidoDAO.listarPorRestaurante(idRestaurante);
+
+        return todosPedidos.stream()
+                .filter(p -> !"ENTREGUE".equals(p.getStatus()) && !"CANCELADO".equals(p.getStatus()))
+                .collect(Collectors.toList());
+    }
+
+    public List<Pedido> listarPedidosDoUsuario(int idUsuario) {
+        return pedidoDAO.listarPorUsuario(idUsuario);
+    }
+
+    public List<Pedido> listarPedidosAtivosDoUsuario(int idUsuario) {
+        List<Pedido> todosPedidos = pedidoDAO.listarPorUsuario(idUsuario);
 
         return todosPedidos.stream()
                 .filter(p -> !"ENTREGUE".equals(p.getStatus()) && !"CANCELADO".equals(p.getStatus()))

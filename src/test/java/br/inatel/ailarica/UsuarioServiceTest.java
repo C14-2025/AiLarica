@@ -1,5 +1,8 @@
 package br.inatel.ailarica;
 
+import br.inatel.ailarica.Cliente.Usuario;
+import br.inatel.ailarica.Cliente.UsuarioService;
+import br.inatel.ailarica.Cliente.UsuarioDAO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;

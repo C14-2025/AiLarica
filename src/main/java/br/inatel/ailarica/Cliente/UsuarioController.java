@@ -1,4 +1,4 @@
-package br.inatel.ailarica;
+package br.inatel.ailarica.Cliente;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -61,4 +61,3 @@ public class UsuarioController {
         public String getNovaSenha() { return novaSenha; }
     }
 }
-

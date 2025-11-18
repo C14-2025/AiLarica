@@ -1,4 +1,4 @@
-package br.inatel.ailarica.Restaurantes; // (ou seu pacote)
+package br.inatel.ailarica.Pedidos;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -95,11 +95,21 @@ public class PedidoDAO {
         return pedidos;
     }
 
+    // READ: Listar pedidos de um USUARIO
+    public List<Pedido> listarPorUsuario(int idUsuario) {
+        String sql = "SELECT * FROM pedido WHERE idUsuario = ?";
+        List<Pedido> pedidos = jdbcTemplate.query(sql, pedidoRowMapper, idUsuario);
+
+        for (Pedido p : pedidos) {
+            List<ItemPedido> itens = itemPedidoDAO.listarPorPedido(p.getIdPedido());
+            p.setItens(itens);
+        }
+        return pedidos;
+    }
+
     // UPDATE: Atualizar o STATUS de um pedido (Funcionalidade 5)
     public void atualizarStatus(int idPedido, String novoStatus) {
         String sql = "UPDATE pedido SET status = ? WHERE idPedido = ?";
         jdbcTemplate.update(sql, novoStatus, idPedido);
     }
-
-    // (Você pode adicionar 'listarPorUsuario' se precisar)
 }
