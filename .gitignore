@@ -1,18 +1,38 @@
+# --- Maven / Java (Backend) ---
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+*.log
 
-### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
+# --- Node.js / Vue (Frontend) ---
+# Dependências do Node (GIGANTE, nunca commite isso)
+/frontend/node_modules/
+# Build de produção
+/frontend/dist/
+# Cache do Vite
+/frontend/.vite/
+# Logs de erro do npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Banco de Dados (SQLite) ---
+# Ignorar o banco local para não sobrescrever os dados dos amigos
+*.db
+*.sqlite
+*.sqlite3
+
+# --- IntelliJ IDEA / WebStorm ---
+# Arquivos de configuração pessoal da IDE
+.idea/
 *.iws
 *.iml
 *.ipr
+out/
 
-### Eclipse ###
+# --- Eclipse ---
 .apt_generated
 .classpath
 .factorypath
@@ -20,8 +40,9 @@ target/
 .settings
 .springBeans
 .sts4-cache
+bin/
 
-### NetBeans ###
+# --- NetBeans ---
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -31,11 +52,12 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
+# --- VS Code ---
 .vscode/
 
-### Mac OS ###
+# --- Mac OS ---
 .DS_Store
 
+# --- Outros ---
 ### usuarios.txt ###
 usuarios.txt
