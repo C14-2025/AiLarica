@@ -1,4 +1,4 @@
-package br.inatel.ailarica;
+package br.inatel.ailarica.Login;
 
 import br.inatel.ailarica.Cliente.Usuario;
 import br.inatel.ailarica.Cliente.UsuarioService;
