@@ -113,12 +113,18 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const userType = ref<'user' | 'restaurant'>('user')
+const router = useRouter()
 
 const handleLogin = () => {
   console.log(`Tentativa de login como ${userType.value}`)
   // Lógica de login (apenas frontend, então apenas log)
+  // Redireciona para o dashboard do restaurante quando fizer login como restaurante
+  if (userType.value === 'restaurant') {
+    router.push('/restaurante/dashboard')
+  }
 }
 </script>
 
