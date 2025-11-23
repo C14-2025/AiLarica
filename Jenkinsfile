@@ -3,8 +3,8 @@ pipeline {
 
     // Define as ferramentas que configuramos no "Global Tool Configuration"
     tools {
-        maven 'maven-default'   // Nome configurado no passo anterior
-        jdk 'jdk-17'      // Seu projeto usa Java 17, não 23
+        maven 'mvn-default'   // Nome configurado no passo anterior
+        jdk 'JDK-17'      // Seu projeto usa Java 17, não 23
         nodejs 'node-20'  // Necessário para o frontend (Plugin NodeJS)
     }
 
