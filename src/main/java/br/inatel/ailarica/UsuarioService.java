@@ -1,5 +1,6 @@
 package br.inatel.ailarica;
 
+import br.inatel.ailarica.security.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,9 +10,11 @@ import java.util.Optional;
 public class UsuarioService {
 
     private final UsuarioDAO usuarioDAO;
+    private final PasswordEncoder passwordEncoder;
 
-    public UsuarioService(UsuarioDAO usuarioDAO) {
+    public UsuarioService(UsuarioDAO usuarioDAO, PasswordEncoder passwordEncoder) {
         this.usuarioDAO = usuarioDAO;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // Validações de email e senha
@@ -70,7 +73,9 @@ public class UsuarioService {
             return false; // já existe
         }
 
-        usuarioDAO.criar(new Usuario(nome, email, senha, null, "USUARIO"));
+        // Criptografar senha antes de salvar
+        String senhaHash = passwordEncoder.encode(senha);
+        usuarioDAO.criar(new Usuario(nome, email, senhaHash, null, "USUARIO"));
         return true;
     }
 
@@ -95,6 +100,10 @@ public class UsuarioService {
             usuario.setTipo("USUARIO");
         }
 
+        // Criptografar senha antes de salvar
+        String senhaHash = passwordEncoder.encode(usuario.getSenha());
+        usuario.setSenha(senhaHash);
+
         usuarioDAO.criar(usuario);
         return true;
     }
@@ -106,9 +115,11 @@ public class UsuarioService {
         }
 
         return usuarioDAO.buscarPorEmail(email)
-                .filter(u -> u.getSenha().equals(senhaAntiga))
+                .filter(u -> passwordEncoder.matches(senhaAntiga, u.getSenha()))
                 .map(u -> {
-                    u.setSenha(novaSenha);
+                    // Criptografar nova senha
+                    String novaSenhaHash = passwordEncoder.encode(novaSenha);
+                    u.setSenha(novaSenhaHash);
                     usuarioDAO.atualizar(u);
                     return true;
                 })
@@ -118,7 +129,7 @@ public class UsuarioService {
     // Login (só permite se confirmado)
     public Usuario login(String email, String senha) {
         return usuarioDAO.buscarPorEmail(email)
-                .filter(u -> u.getSenha().equals(senha) && u.isConfirmado())
+                .filter(u -> passwordEncoder.matches(senha, u.getSenha()) && u.isConfirmado())
                 .orElse(null);
     }
 
@@ -132,12 +143,12 @@ public class UsuarioService {
 
         // Buscar usuário
         Optional<Usuario> usuarioOpt = usuarioDAO.buscarPorEmail(email);
-
+        
         if (usuarioOpt.isPresent()) {
             Usuario usuario = usuarioOpt.get();
-
-            // Validar senha e confirmação
-            if (usuario.getSenha().equals(senha) && usuario.isConfirmado()) {
+            
+            // Validar senha (comparar com hash) e confirmação
+            if (passwordEncoder.matches(senha, usuario.getSenha()) && usuario.isConfirmado()) {
                 // Validar que é do tipo USUARIO
                 if ("USUARIO".equals(usuario.getTipo())) {
                     // Validar que o endereço corresponde (ou atualizar se necessário)
@@ -149,7 +160,7 @@ public class UsuarioService {
                 }
             }
         }
-
+        
         return null;
     }
 
