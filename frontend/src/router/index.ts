@@ -1,26 +1,30 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
-import DashboardView from '../views/DashboardView.vue'
-import PedidosView from '../views/PedidosView.vue'
+import RegisterView from '../views/RegisterView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
+      redirect: '/login'
+    },
+    {
+      path: '/login',
       name: 'login',
       component: LoginView
     },
     {
-      path: '/dashboard',
-      name: 'dashboard',
-      component: DashboardView
+      path: '/register',
+      name: 'register',
+      component: RegisterView
     },
-    {
-      path: '/pedidos',
-      name: 'pedidos',
-      component: PedidosView
-    }
+    // Rotas de exemplo do template Vue, se existirem, serão removidas ou adaptadas
+    // {
+    //   path: '/about',
+    //   name: 'about',
+    //   component: () => import('../views/AboutView.vue')
+    // }
   ]
 })
 

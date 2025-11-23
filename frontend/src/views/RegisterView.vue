@@ -3,10 +3,10 @@
     <div class="max-w-md w-full bg-white p-8 rounded-xl shadow-2xl">
       <div class="text-center mb-8">
         <h1 class="text-3xl font-extrabold text-gray-900">
-          Bem-vindo ao AiLarica
+          Crie sua conta no AiLarica
         </h1>
         <p class="mt-2 text-sm text-gray-600">
-          Faça login para continuar
+          Preencha os dados abaixo
         </p>
       </div>
 
@@ -36,7 +36,39 @@
         </button>
       </div>
 
-      <form class="space-y-6" @submit.prevent="handleLogin">
+      <form class="space-y-6" @submit.prevent="handleRegister">
+        <!-- Campos Comuns -->
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-700">
+            Nome Completo
+          </label>
+          <div class="mt-1">
+            <input
+              id="name"
+              name="name"
+              type="text"
+              autocomplete="name"
+              required
+              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+            />
+          </div>
+        </div>
+
+        <div v-if="userType === 'restaurant'">
+          <label for="restaurant-name" class="block text-sm font-medium text-gray-700">
+            Nome do Restaurante
+          </label>
+          <div class="mt-1">
+            <input
+              id="restaurant-name"
+              name="restaurant-name"
+              type="text"
+              required
+              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+            />
+          </div>
+        </div>
+
         <div>
           <label for="email" class="block text-sm font-medium text-gray-700">
             Email
@@ -62,30 +94,25 @@
               id="password"
               name="password"
               type="password"
-              autocomplete="current-password"
+              autocomplete="new-password"
               required
               class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
             />
           </div>
         </div>
 
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
+        <div>
+          <label for="confirm-password" class="block text-sm font-medium text-gray-700">
+            Confirmar Senha
+          </label>
+          <div class="mt-1">
             <input
-              id="remember-me"
-              name="remember-me"
-              type="checkbox"
-              class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+              id="confirm-password"
+              name="confirm-password"
+              type="password"
+              required
+              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
             />
-            <label for="remember-me" class="ml-2 block text-sm text-gray-900">
-              Lembrar de mim
-            </label>
-          </div>
-
-          <div class="text-sm">
-            <a href="/register" class="font-medium text-orange-600 hover:text-orange-500">
-              Esqueceu a senha?
-            </a>
           </div>
         </div>
 
@@ -94,16 +121,16 @@
             type="submit"
             class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition duration-150 ease-in-out"
           >
-            Entrar como {{ userType === 'user' ? 'Usuário' : 'Restaurante' }}
+            Cadastrar como {{ userType === 'user' ? 'Usuário' : 'Restaurante' }}
           </button>
         </div>
       </form>
 
       <div class="mt-6 text-center">
         <p class="text-sm text-gray-600">
-          Não tem uma conta?
-          <a href="/register" class="font-medium text-orange-600 hover:text-orange-500">
-            Cadastre-se
+          Já tem uma conta?
+          <a href="/login" class="font-medium text-orange-600 hover:text-orange-500">
+            Faça login
           </a>
         </p>
       </div>
@@ -116,9 +143,9 @@ import { ref } from 'vue'
 
 const userType = ref<'user' | 'restaurant'>('user')
 
-const handleLogin = () => {
-  console.log(`Tentativa de login como ${userType.value}`)
-  // Lógica de login (apenas frontend, então apenas log)
+const handleRegister = () => {
+  console.log(`Tentativa de cadastro como ${userType.value}`)
+  // Lógica de cadastro (apenas frontend, então apenas log)
 }
 </script>
 
