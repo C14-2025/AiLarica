@@ -39,24 +39,29 @@ pipeline {
         }
 
         stage('Frontend (Vue.js)') {
-            steps {
-                dir('frontend') {
-                    script {
-                        echo '--- Iniciando Build do Frontend ---'
+                    steps {
+                        dir('frontend') {
+                            script {
+                                echo '--- Iniciando Build do Frontend ---'
 
-                        // MUDANÇA AQUI:
-                        // 1. Garante que o cache não atrapalhe (opcional, mas seguro)
-                        sh 'rm -rf node_modules'
+                                // MUDANÇA: Usar 'npm ci' é mais seguro e rápido para CI.
+                                // Forçamos NODE_ENV=development para garantir que devDependencies sejam baixadas
+                                // independentemente da configuração global do Jenkins.
+                                sh 'NODE_ENV=development npm ci'
 
-                        // 2. Força a instalação de dependências de DESENVOLVIMENTO (--include=dev)
-                        // Isso resolve o erro "Cannot find module eslint/pinia/vitest"
-                        sh 'npm install --include=dev'
-
-                        // 3. Roda o build
-                        sh 'npm run build'
+                                // Agora rodamos o build.
+                                // O build de produção geralmente define NODE_ENV=production internamente,
+                                // mas se precisar forçar, pode fazer:
+                                sh 'npm run build'
+                            }
+                        }
+                    }
+                    post {
+                        success {
+                            archiveArtifacts artifacts: 'frontend/dist/**', onlyIfSuccessful: true
+                        }
                     }
                 }
-            }
             post {
                 success {
                     // Salva a pasta dist gerada
