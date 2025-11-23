@@ -1,10 +1,10 @@
 pipeline {
     agent any
 
+    // Ferramentas configuradas no Jenkins
     tools {
         maven 'mvn-default'
         jdk 'JDK-17'
-        // Se não tiver o plugin NodeJS instalado, comente a linha abaixo e remova o stage de frontend por enquanto
         nodejs 'node-20'
     }
 
@@ -19,24 +19,27 @@ pipeline {
             steps {
                 dir('backend') {
                     script {
-                        // ATENÇÃO: Usando 'bat' porque seu ambiente é Windows.
-                        // Se fosse Linux, seria 'sh'.
+                        echo '--- Iniciando Build do Backend (Linux) ---'
 
-                        echo '--- Validando e Compilando ---'
-                        bat 'mvn clean package -DskipTests'
+                        // 1. Compila e gera o JAR (pula testes aqui para ganhar tempo)
+                        // Usa 'sh' pois o servidor Jenkins é Linux
+                        sh 'mvn clean package -DskipTests'
 
-                        echo '--- Rodando Testes ---'
-                        // O "|| exit 0" impede que o pipeline pare se um teste falhar,
-                        // permitindo que o Junit processe o relatório depois.
-                        bat 'mvn test || exit 0'
+                        echo '--- Rodando Testes Unitários ---'
+
+                        // 2. Roda os testes
+                        // O "|| true" impede que o pipeline pare se um teste falhar,
+                        // permitindo que o relatório de erros seja gerado no passo 'post'.
+                        sh 'mvn test || true'
                     }
                 }
             }
             post {
                 always {
-                    // O caminho aqui deve ser a partir da RAIZ do projeto
+                    // Procura os relatórios XML dentro da pasta backend
                     junit 'backend/target/surefire-reports/*.xml'
 
+                    // Guarda o arquivo .jar gerado
                     archiveArtifacts artifacts: 'backend/target/*.jar', allowEmptyArchive: true
                 }
             }
@@ -45,9 +48,12 @@ pipeline {
         stage('Frontend (Vue.js)') {
             steps {
                 dir('frontend') {
-                    // 'bat' para Windows
-                    bat 'npm install'
-                    bat 'npm run build'
+                    script {
+                        echo '--- Iniciando Build do Frontend (Linux) ---'
+                        // Comandos npm usando 'sh'
+                        sh 'npm install'
+                        sh 'npm run build'
+                    }
                 }
             }
         }
