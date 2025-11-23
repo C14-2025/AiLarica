@@ -26,12 +26,12 @@ const router = createRouter({
       component: DashboardView,
       meta: { requiresAuth: true, role: 'restaurant' }
     },
-    // Rotas de exemplo do template Vue, se existirem, serão removidas ou adaptadas
-    // {
-    //   path: '/about',
-    //   name: 'about',
-    //   component: () => import('../views/AboutView.vue')
-    // }
+    {
+      path: '/restaurante/pedidos',
+      name: 'restaurante-pedidos',
+      component: () => import('../views/PedidosView.vue'),
+      meta: { requiresAuth: true, role: 'restaurant' }
+    }
   ]
 })
 

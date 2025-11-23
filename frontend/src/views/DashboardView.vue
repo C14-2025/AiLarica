@@ -233,7 +233,7 @@ const toggleRestaurantStatus = async () => {
 };
 
 const goToPedidos = () => {
-  router.push('/pedidos');
+  router.push('/restaurante/pedidos');
 };
 
 // --- Funções de Carregamento de Dados ---
@@ -270,16 +270,24 @@ const fetchMenuItems = async () => {
 const fetchRecentOrders = async () => {
   try {
     const response = await axios.get(`${API_BASE_URL}/restaurantes/${RESTAURANT_ID}/pedidos-ativos`);
-    recentOrders.value = response.data.map((pedido: any) => ({
-      id: pedido.id.toString(),
-      customerName: 'Cliente ' + pedido.clienteId, // Ajustar conforme a estrutura real do Pedido
+    // Limitar a 3 pedidos recentes
+    recentOrders.value = response.data.slice(0, 3).map((pedido: any) => ({
+      id: pedido.idPedido?.toString() || pedido.id?.toString(),
+      idPedido: pedido.idPedido || pedido.id,
+      customerName: 'Cliente #' + pedido.idUsuario,
+      idUsuario: pedido.idUsuario,
       total: pedido.valorTotal,
+      valorTotal: pedido.valorTotal,
       time: pedido.dataHora,
-      status: 'pending', // O backend retorna o status, mas a estrutura do Pedido não foi lida. Assumindo 'pending' por enquanto.
-      items: [] // Itens do pedido não estão disponíveis neste endpoint
+      dataHora: pedido.dataHora,
+      status: pedido.status || 'pendente',
+      items: pedido.itens || [],
+      itens: pedido.itens || []
     }));
   } catch (error) {
     console.error('Erro ao buscar pedidos recentes:', error);
+    // Dados de fallback para testes
+    recentOrders.value = [];
   }
 };
 
