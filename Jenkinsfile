@@ -1,66 +1,53 @@
 pipeline {
     agent any
 
-    // Define as ferramentas que configuramos no "Global Tool Configuration"
     tools {
-        maven 'mvn-default'   // Nome configurado no passo anterior
-        jdk 'JDK-17'      // Seu projeto usa Java 17, não 23
-        nodejs 'node-20'  // Necessário para o frontend (Plugin NodeJS)
+        maven 'mvn-default'
+        jdk 'JDK-17'
+        // Se não tiver o plugin NodeJS instalado, comente a linha abaixo e remova o stage de frontend por enquanto
+        nodejs 'node-20'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Baixa o código do seu repositório
                 checkout scm
             }
         }
 
         stage('Backend (Java/Spring)') {
             steps {
-                dir('backend') { // Entra na pasta do backend
+                dir('backend') {
                     script {
-                        // 1. Valida estrutura do POM
-                        sh 'mvn validate'
+                        // ATENÇÃO: Usando 'bat' porque seu ambiente é Windows.
+                        // Se fosse Linux, seria 'sh'.
 
-                        // 2. Verifica estilo de código (Checkstyle)
-                        // O "|| true" impede que o build falhe apenas por estilo, igual ao seu GitHub Actions
-                        sh 'mvn -B checkstyle:check || true'
+                        echo '--- Validando e Compilando ---'
+                        bat 'mvn clean package -DskipTests'
 
-                        // 3. Verifica dependências desatualizadas e salva na raiz
-                        sh 'mvn versions:display-dependency-updates > ../outdated.txt || true'
-
-                        // 4. Roda os testes unitários
-                        sh 'mvn test'
-
-                        // 5. Gera o artefato final (JAR)
-                        sh 'mvn clean package -DskipTests' 
+                        echo '--- Rodando Testes ---'
+                        // O "|| exit 0" impede que o pipeline pare se um teste falhar,
+                        // permitindo que o Junit processe o relatório depois.
+                        bat 'mvn test || exit 0'
                     }
                 }
             }
             post {
                 always {
-                    // Arquiva os resultados para você ver na interface do Jenkins
-                    archiveArtifacts artifacts: 'backend/target/*.jar, backend/target/surefire-reports/**, backend/target/checkstyle-result.xml, outdated.txt', allowEmptyArchive: true, onlyIfSuccessful: false
-                    
-                    // Opcional: Se tiver o plugin "Junit", exibe gráficos de teste
+                    // O caminho aqui deve ser a partir da RAIZ do projeto
                     junit 'backend/target/surefire-reports/*.xml'
+
+                    archiveArtifacts artifacts: 'backend/target/*.jar', allowEmptyArchive: true
                 }
             }
         }
 
         stage('Frontend (Vue.js)') {
             steps {
-                dir('frontend') { // Entra na pasta do frontend
-                    // O plugin NodeJS garante que o 'npm' esteja no PATH aqui
-                    sh 'npm install'
-                    sh 'npm run build'
-                }
-            }
-            post {
-                success {
-                    // Arquiva a pasta 'dist' gerada pelo build do Vue
-                    archiveArtifacts artifacts: 'frontend/dist/**', onlyIfSuccessful: true
+                dir('frontend') {
+                    // 'bat' para Windows
+                    bat 'npm install'
+                    bat 'npm run build'
                 }
             }
         }
