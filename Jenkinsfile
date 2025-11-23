@@ -39,29 +39,20 @@ pipeline {
         }
 
         stage('Frontend (Vue.js)') {
-                    steps {
-                        dir('frontend') {
-                            script {
-                                echo '--- Iniciando Build do Frontend ---'
+            steps {
+                dir('frontend') {
+                    script {
+                        echo '--- Iniciando Build do Frontend ---'
 
-                                // MUDANÇA: Usar 'npm ci' é mais seguro e rápido para CI.
-                                // Forçamos NODE_ENV=development para garantir que devDependencies sejam baixadas
-                                // independentemente da configuração global do Jenkins.
-                                sh 'NODE_ENV=development npm ci'
+                        // MUDANÇA: Usar 'npm ci' é mais seguro e rápido para CI.
+                        // Forçamos NODE_ENV=development para garantir que devDependencies sejam baixadas
+                        sh 'NODE_ENV=development npm ci'
 
-                                // Agora rodamos o build.
-                                // O build de produção geralmente define NODE_ENV=production internamente,
-                                // mas se precisar forçar, pode fazer:
-                                sh 'npm run build'
-                            }
-                        }
-                    }
-                    post {
-                        success {
-                            archiveArtifacts artifacts: 'frontend/dist/**', onlyIfSuccessful: true
-                        }
+                        // Agora rodamos o build.
+                        sh 'npm run build'
                     }
                 }
+            }
             post {
                 success {
                     // Salva a pasta dist gerada
