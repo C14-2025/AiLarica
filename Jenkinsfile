@@ -21,25 +21,18 @@ pipeline {
                     script {
                         echo '--- Iniciando Build do Backend (Linux) ---'
 
-                        // 1. Compila e gera o JAR (pula testes aqui para ganhar tempo)
-                        // Usa 'sh' pois o servidor Jenkins é Linux
+                        // Compila e gera o JAR
                         sh 'mvn clean package -DskipTests'
 
                         echo '--- Rodando Testes Unitários ---'
-
-                        // 2. Roda os testes
-                        // O "|| true" impede que o pipeline pare se um teste falhar,
-                        // permitindo que o relatório de erros seja gerado no passo 'post'.
+                        // O "|| true" permite gerar relatório mesmo com falha
                         sh 'mvn test || true'
                     }
                 }
             }
             post {
                 always {
-                    // Procura os relatórios XML dentro da pasta backend
                     junit 'backend/target/surefire-reports/*.xml'
-
-                    // Guarda o arquivo .jar gerado
                     archiveArtifacts artifacts: 'backend/target/*.jar', allowEmptyArchive: true
                 }
             }
@@ -49,11 +42,25 @@ pipeline {
             steps {
                 dir('frontend') {
                     script {
-                        echo '--- Iniciando Build do Frontend (Linux) ---'
-                        // Comandos npm usando 'sh'
-                        sh 'npm install'
+                        echo '--- Iniciando Build do Frontend ---'
+
+                        // MUDANÇA AQUI:
+                        // 1. Garante que o cache não atrapalhe (opcional, mas seguro)
+                        sh 'rm -rf node_modules'
+
+                        // 2. Força a instalação de dependências de DESENVOLVIMENTO (--include=dev)
+                        // Isso resolve o erro "Cannot find module eslint/pinia/vitest"
+                        sh 'npm install --include=dev'
+
+                        // 3. Roda o build
                         sh 'npm run build'
                     }
+                }
+            }
+            post {
+                success {
+                    // Salva a pasta dist gerada
+                    archiveArtifacts artifacts: 'frontend/dist/**', onlyIfSuccessful: true
                 }
             }
         }
