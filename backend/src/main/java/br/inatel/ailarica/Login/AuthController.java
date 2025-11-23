@@ -1,4 +1,6 @@
 package br.inatel.ailarica.Login;
+import br.inatel.ailarica.Cliente.Usuario;
+import br.inatel.ailarica.Cliente.UsuarioService;
 
 import br.inatel.ailarica.Restaurantes.Restaurante;
 import br.inatel.ailarica.Restaurantes.RestauranteAuthService;

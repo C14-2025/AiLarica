@@ -1,4 +1,4 @@
-package br.inatel.ailarica;
+package br.inatel.ailarica; // MUDANÇA 1: Ajustado para a pasta raiz onde o arquivo está
 
 import br.inatel.ailarica.Restaurantes.Restaurante;
 import br.inatel.ailarica.Restaurantes.RestauranteAuthService;
@@ -10,6 +10,13 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+// MUDANÇA 2: Imports corrigidos para .Login (estavam .Cliente incorretamente)
+import br.inatel.ailarica.Login.AuthController;
+import br.inatel.ailarica.Login.LoginRequest;
+import br.inatel.ailarica.Login.AuthResponse;
+import br.inatel.ailarica.Cliente.*;
+// ---------------------------------------------------------
 
 import java.util.Optional;
 
