@@ -1,5 +1,6 @@
 package br.inatel.ailarica.Restaurantes;
 
+import br.inatel.ailarica.security.PasswordEncoder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -14,7 +15,7 @@ import static org.mockito.Mockito.*;
 
 /**
  * Testes unitários para RestauranteAuthService.
- * Testa funcionalidades de autenticação de restaurante.
+ * Testa funcionalidades de autenticação de restaurante com criptografia de senhas.
  */
 @DisplayName("Testes do Serviço de Autenticação de Restaurante")
 class RestauranteAuthServiceTest {
@@ -22,12 +23,15 @@ class RestauranteAuthServiceTest {
     @Mock
     private RestauranteDAO restauranteDAO;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     private RestauranteAuthService restauranteAuthService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        restauranteAuthService = new RestauranteAuthService(restauranteDAO);
+        restauranteAuthService = new RestauranteAuthService(restauranteDAO, passwordEncoder);
     }
 
     // ============ TESTES DE LOGIN DE RESTAURANTE ============
@@ -38,15 +42,17 @@ class RestauranteAuthServiceTest {
         // Arrange
         String email = "restaurante@example.com";
         String senha = "Senha@123";
+        String senhaHash = "$2a$12$abcdefghijklmnopqrstuvwxyz";
 
         Restaurante restaurante = new Restaurante();
         restaurante.setIdRestaurante(1);
         restaurante.setNome("Restaurante Delícia");
         restaurante.setEmail(email);
-        restaurante.setSenha(senha);
+        restaurante.setSenha(senhaHash);
         restaurante.setAtivo(true);
 
         when(restauranteDAO.buscarPorEmail(email)).thenReturn(Optional.of(restaurante));
+        when(passwordEncoder.matches(senha, senhaHash)).thenReturn(true);
 
         // Act
         Restaurante resultado = restauranteAuthService.loginRestaurante(email, senha);
@@ -56,7 +62,7 @@ class RestauranteAuthServiceTest {
         assertEquals(email, resultado.getEmail());
         assertEquals("Restaurante Delícia", resultado.getNome());
         assertTrue(resultado.isAtivo());
-        verify(restauranteDAO, times(1)).buscarPorEmail(email);
+        verify(passwordEncoder, times(1)).matches(senha, senhaHash);
     }
 
     @Test
@@ -65,15 +71,17 @@ class RestauranteAuthServiceTest {
         // Arrange
         String email = "restaurante@example.com";
         String senha = "Senha@123";
+        String senhaHash = "$2a$12$abcdefghijklmnopqrstuvwxyz";
 
         Restaurante restaurante = new Restaurante();
         restaurante.setIdRestaurante(1);
         restaurante.setNome("Restaurante Delícia");
         restaurante.setEmail(email);
-        restaurante.setSenha(senha);
-        restaurante.setAtivo(false); // Inativo
+        restaurante.setSenha(senhaHash);
+        restaurante.setAtivo(false);
 
         when(restauranteDAO.buscarPorEmail(email)).thenReturn(Optional.of(restaurante));
+        when(passwordEncoder.matches(senha, senhaHash)).thenReturn(true);
 
         // Act
         Restaurante resultado = restauranteAuthService.loginRestaurante(email, senha);
@@ -89,15 +97,17 @@ class RestauranteAuthServiceTest {
         String email = "restaurante@example.com";
         String senhaCorreta = "Senha@123";
         String senhaIncorreta = "SenhaErrada@123";
+        String senhaHash = "$2a$12$abcdefghijklmnopqrstuvwxyz";
 
         Restaurante restaurante = new Restaurante();
         restaurante.setIdRestaurante(1);
         restaurante.setNome("Restaurante Delícia");
         restaurante.setEmail(email);
-        restaurante.setSenha(senhaCorreta);
+        restaurante.setSenha(senhaHash);
         restaurante.setAtivo(true);
 
         when(restauranteDAO.buscarPorEmail(email)).thenReturn(Optional.of(restaurante));
+        when(passwordEncoder.matches(senhaIncorreta, senhaHash)).thenReturn(false);
 
         // Act
         Restaurante resultado = restauranteAuthService.loginRestaurante(email, senhaIncorreta);
@@ -163,7 +173,7 @@ class RestauranteAuthServiceTest {
         restaurante.setIdRestaurante(1);
         restaurante.setNome("Restaurante Delícia");
         restaurante.setEmail(email);
-        restaurante.setSenha(null); // Sem senha
+        restaurante.setSenha(null);
         restaurante.setAtivo(true);
 
         when(restauranteDAO.buscarPorEmail(email)).thenReturn(Optional.of(restaurante));
@@ -184,15 +194,19 @@ class RestauranteAuthServiceTest {
         String email = "restaurante@example.com";
         String senhaAntiga = "SenhaAntiga@123";
         String novaSenha = "NovaSenha@456";
+        String senhaAntigaHash = "$2a$12$abcdefghijklmnopqrstuvwxyz";
+        String novaSenhaHash = "$2a$12$zyxwvutsrqponmlkjihgfedcba";
 
         Restaurante restaurante = new Restaurante();
         restaurante.setIdRestaurante(1);
         restaurante.setNome("Restaurante Delícia");
         restaurante.setEmail(email);
-        restaurante.setSenha(senhaAntiga);
+        restaurante.setSenha(senhaAntigaHash);
         restaurante.setAtivo(true);
 
         when(restauranteDAO.buscarPorEmail(email)).thenReturn(Optional.of(restaurante));
+        when(passwordEncoder.matches(senhaAntiga, senhaAntigaHash)).thenReturn(true);
+        when(passwordEncoder.encode(novaSenha)).thenReturn(novaSenhaHash);
         doNothing().when(restauranteDAO).atualizar(any(Restaurante.class));
 
         // Act
@@ -211,15 +225,17 @@ class RestauranteAuthServiceTest {
         String senhaAntiga = "SenhaAntiga@123";
         String senhaAntigaIncorreta = "SenhaErrada@123";
         String novaSenha = "NovaSenha@456";
+        String senhaAntigaHash = "$2a$12$abcdefghijklmnopqrstuvwxyz";
 
         Restaurante restaurante = new Restaurante();
         restaurante.setIdRestaurante(1);
         restaurante.setNome("Restaurante Delícia");
         restaurante.setEmail(email);
-        restaurante.setSenha(senhaAntiga);
+        restaurante.setSenha(senhaAntigaHash);
         restaurante.setAtivo(true);
 
         when(restauranteDAO.buscarPorEmail(email)).thenReturn(Optional.of(restaurante));
+        when(passwordEncoder.matches(senhaAntigaIncorreta, senhaAntigaHash)).thenReturn(false);
 
         // Act
         boolean resultado = restauranteAuthService.atualizarSenha(email, senhaAntigaIncorreta, novaSenha);
@@ -235,13 +251,14 @@ class RestauranteAuthServiceTest {
         // Arrange
         String email = "restaurante@example.com";
         String senhaAntiga = "SenhaAntiga@123";
-        String novaSenhaInvalida = "Abc"; // Muito curta
+        String novaSenhaInvalida = "Abc";
+        String senhaAntigaHash = "$2a$12$abcdefghijklmnopqrstuvwxyz";
 
         Restaurante restaurante = new Restaurante();
         restaurante.setIdRestaurante(1);
         restaurante.setNome("Restaurante Delícia");
         restaurante.setEmail(email);
-        restaurante.setSenha(senhaAntiga);
+        restaurante.setSenha(senhaAntigaHash);
         restaurante.setAtivo(true);
 
         when(restauranteDAO.buscarPorEmail(email)).thenReturn(Optional.of(restaurante));
