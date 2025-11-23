@@ -1,4 +1,7 @@
-package br.inatel.ailarica.Pedidos;
+package br.inatel.ailarica.Restaurantes;
+
+import br.inatel.ailarica.Pedidos.Pedido;
+import br.inatel.ailarica.Pedidos.PedidoService;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

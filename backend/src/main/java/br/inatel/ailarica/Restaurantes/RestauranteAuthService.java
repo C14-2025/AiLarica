@@ -1,19 +1,22 @@
 package br.inatel.ailarica.Restaurantes;
 
+import br.inatel.ailarica.security.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 /**
  * Serviço de autenticação para restaurantes.
- * Gerencia login e validações de restaurante.
+ * Gerencia login e validações de restaurante com criptografia de senhas.
  */
 @Service
 public class RestauranteAuthService {
 
     private final RestauranteDAO restauranteDAO;
+    private final PasswordEncoder passwordEncoder;
 
-    public RestauranteAuthService(RestauranteDAO restauranteDAO) {
+    public RestauranteAuthService(RestauranteDAO restauranteDAO, PasswordEncoder passwordEncoder) {
         this.restauranteDAO = restauranteDAO;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // Validação de email
@@ -51,7 +54,7 @@ public class RestauranteAuthService {
     /**
      * Realiza login de restaurante com email e senha.
      * @param email Email do restaurante
-     * @param senha Senha do restaurante
+     * @param senha Senha do restaurante (em texto plano)
      * @return Restaurante autenticado ou null se falhar
      */
     public Restaurante loginRestaurante(String email, String senha) {
@@ -67,8 +70,8 @@ public class RestauranteAuthService {
         if (restauranteOpt.isPresent()) {
             Restaurante restaurante = restauranteOpt.get();
 
-            // Validar senha
-            if (restaurante.getSenha() != null && restaurante.getSenha().equals(senha)) {
+            // Validar senha (comparar com hash)
+            if (restaurante.getSenha() != null && passwordEncoder.matches(senha, restaurante.getSenha())) {
                 // Verificar se está ativo
                 if (restaurante.isAtivo()) {
                     return restaurante;
@@ -89,8 +92,8 @@ public class RestauranteAuthService {
     /**
      * Atualiza a senha de um restaurante.
      * @param email Email do restaurante
-     * @param senhaAntiga Senha anterior
-     * @param novaSenha Nova senha
+     * @param senhaAntiga Senha anterior (em texto plano)
+     * @param novaSenha Nova senha (em texto plano)
      * @return true se atualizado com sucesso
      */
     public boolean atualizarSenha(String email, String senhaAntiga, String novaSenha) {
@@ -104,8 +107,11 @@ public class RestauranteAuthService {
         if (restauranteOpt.isPresent()) {
             Restaurante restaurante = restauranteOpt.get();
 
-            if (restaurante.getSenha() != null && restaurante.getSenha().equals(senhaAntiga)) {
-                restaurante.setSenha(novaSenha);
+            // Validar senha anterior (comparar com hash)
+            if (restaurante.getSenha() != null && passwordEncoder.matches(senhaAntiga, restaurante.getSenha())) {
+                // Criptografar nova senha
+                String novaSenhaHash = passwordEncoder.encode(novaSenha);
+                restaurante.setSenha(novaSenhaHash);
                 restauranteDAO.atualizar(restaurante);
                 return true;
             }

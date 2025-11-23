@@ -1,4 +1,6 @@
 package br.inatel.ailarica.Login;
+import br.inatel.ailarica.Cliente.Usuario;
+import br.inatel.ailarica.Cliente.UsuarioService;
 
 /**
  * Classe de resposta para requisições de autenticação.
@@ -10,6 +12,7 @@ public class AuthResponse {
     private String email;
     private String tipo; // "USUARIO" ou "RESTAURANTE"
     private String endereco; // Para usuários
+    private String token; // Token JWT
     private String mensagem;
     private boolean sucesso;
 
@@ -17,13 +20,14 @@ public class AuthResponse {
     public AuthResponse() {
     }
 
-    // Construtor para sucesso
-    public AuthResponse(int id, String nome, String email, String tipo, String endereco, String mensagem) {
+    // Construtor para sucesso com token
+    public AuthResponse(int id, String nome, String email, String tipo, String endereco, String token, String mensagem) {
         this.id = id;
         this.nome = nome;
         this.email = email;
         this.tipo = tipo;
         this.endereco = endereco;
+        this.token = token;
         this.mensagem = mensagem;
         this.sucesso = true;
     }
@@ -89,5 +93,13 @@ public class AuthResponse {
 
     public void setSucesso(boolean sucesso) {
         this.sucesso = sucesso;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }

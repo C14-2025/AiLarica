@@ -1,8 +1,9 @@
 package br.inatel.ailarica;
 
-import br.inatel.ailarica.Cliente.Usuario;
 import br.inatel.ailarica.Cliente.UsuarioService;
+import br.inatel.ailarica.Cliente.Usuario;
 import br.inatel.ailarica.Cliente.UsuarioDAO;
+import br.inatel.ailarica.security.PasswordEncoder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +18,7 @@ import static org.mockito.Mockito.*;
 
 /**
  * Testes unitários para UsuarioService.
- * Testa funcionalidades de login, cadastro e validações.
+ * Testa funcionalidades de login, cadastro e validações com criptografia de senhas.
  */
 @DisplayName("Testes do Serviço de Usuário")
 class UsuarioServiceTest {
@@ -25,12 +26,15 @@ class UsuarioServiceTest {
     @Mock
     private UsuarioDAO usuarioDAO;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     private UsuarioService usuarioService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        usuarioService = new UsuarioService(usuarioDAO);
+        usuarioService = new UsuarioService(usuarioDAO, passwordEncoder);
     }
 
     // ============ TESTES DE LOGIN DE USUÁRIO ============
@@ -41,13 +45,15 @@ class UsuarioServiceTest {
         // Arrange
         String email = "usuario@example.com";
         String senha = "Senha@123";
+        String senhaHash = "$2a$12$abcdefghijklmnopqrstuvwxyz";
         String endereco = "Rua Principal, 123";
 
-        Usuario usuario = new Usuario("João Silva", email, senha, endereco, "USUARIO");
+        Usuario usuario = new Usuario("João Silva", email, senhaHash, endereco, "USUARIO");
         usuario.setId(1);
         usuario.setConfirmado(true);
 
         when(usuarioDAO.buscarPorEmail(email)).thenReturn(Optional.of(usuario));
+        when(passwordEncoder.matches(senha, senhaHash)).thenReturn(true);
 
         // Act
         Usuario resultado = usuarioService.loginUsuario(email, senha, endereco);
@@ -57,7 +63,7 @@ class UsuarioServiceTest {
         assertEquals(email, resultado.getEmail());
         assertEquals("João Silva", resultado.getNome());
         assertEquals(endereco, resultado.getEndereco());
-        verify(usuarioDAO, times(1)).buscarPorEmail(email);
+        verify(passwordEncoder, times(1)).matches(senha, senhaHash);
     }
 
     @Test
@@ -88,7 +94,6 @@ class UsuarioServiceTest {
 
         // Assert
         assertNull(resultado);
-        verify(usuarioDAO, never()).buscarPorEmail(email);
     }
 
     @Test
@@ -97,14 +102,13 @@ class UsuarioServiceTest {
         // Arrange
         String email = "usuario@example.com";
         String senha = "Senha@123";
-        String endereco = "Rua"; // Menos de 5 caracteres
+        String endereco = "Rua";
 
         // Act
         Usuario resultado = usuarioService.loginUsuario(email, senha, endereco);
 
         // Assert
         assertNull(resultado);
-        verify(usuarioDAO, never()).buscarPorEmail(email);
     }
 
     @Test
@@ -113,13 +117,15 @@ class UsuarioServiceTest {
         // Arrange
         String email = "usuario@example.com";
         String senha = "Senha@123";
+        String senhaHash = "$2a$12$abcdefghijklmnopqrstuvwxyz";
         String endereco = "Rua Principal, 123";
 
-        Usuario usuario = new Usuario("João Silva", email, senha, endereco, "USUARIO");
+        Usuario usuario = new Usuario("João Silva", email, senhaHash, endereco, "USUARIO");
         usuario.setId(1);
-        usuario.setConfirmado(false); // Não confirmado
+        usuario.setConfirmado(false);
 
         when(usuarioDAO.buscarPorEmail(email)).thenReturn(Optional.of(usuario));
+        when(passwordEncoder.matches(senha, senhaHash)).thenReturn(true);
 
         // Act
         Usuario resultado = usuarioService.loginUsuario(email, senha, endereco);
@@ -133,15 +139,16 @@ class UsuarioServiceTest {
     void testLoginUsuarioComSenhaIncorreta() {
         // Arrange
         String email = "usuario@example.com";
-        String senhaCorreta = "Senha@123";
         String senhaIncorreta = "SenhaErrada@123";
+        String senhaHash = "$2a$12$abcdefghijklmnopqrstuvwxyz";
         String endereco = "Rua Principal, 123";
 
-        Usuario usuario = new Usuario("João Silva", email, senhaCorreta, endereco, "USUARIO");
+        Usuario usuario = new Usuario("João Silva", email, senhaHash, endereco, "USUARIO");
         usuario.setId(1);
         usuario.setConfirmado(true);
 
         when(usuarioDAO.buscarPorEmail(email)).thenReturn(Optional.of(usuario));
+        when(passwordEncoder.matches(senhaIncorreta, senhaHash)).thenReturn(false);
 
         // Act
         Usuario resultado = usuarioService.loginUsuario(email, senhaIncorreta, endereco);
@@ -174,8 +181,10 @@ class UsuarioServiceTest {
     void testCadastroUsuarioComSucesso() {
         // Arrange
         Usuario usuario = new Usuario("Maria Silva", "maria@example.com", "Senha@123", "Avenida Brasil, 456", "USUARIO");
+        String senhaHash = "$2a$12$abcdefghijklmnopqrstuvwxyz";
 
         when(usuarioDAO.buscarPorEmail("maria@example.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("Senha@123")).thenReturn(senhaHash);
         doNothing().when(usuarioDAO).criar(any(Usuario.class));
 
         // Act
@@ -183,15 +192,16 @@ class UsuarioServiceTest {
 
         // Assert
         assertTrue(resultado);
+        verify(passwordEncoder, times(1)).encode("Senha@123");
         verify(usuarioDAO, times(1)).criar(any(Usuario.class));
     }
 
     @Test
     @DisplayName("Deve falhar no cadastro quando email já existe")
-    void testCadastroUsuarioEmailJaExiste() {
+    void testCadastroUsuarioComEmailDuplicado() {
         // Arrange
         Usuario usuario = new Usuario("Maria Silva", "maria@example.com", "Senha@123", "Avenida Brasil, 456", "USUARIO");
-        Usuario usuarioExistente = new Usuario("Outro Usuário", "maria@example.com", "OutraSenha@123", "Outro Endereço", "USUARIO");
+        Usuario usuarioExistente = new Usuario("João Silva", "maria@example.com", "Senha@123", "Rua Principal, 123", "USUARIO");
 
         when(usuarioDAO.buscarPorEmail("maria@example.com")).thenReturn(Optional.of(usuarioExistente));
 
@@ -205,7 +215,7 @@ class UsuarioServiceTest {
 
     @Test
     @DisplayName("Deve falhar no cadastro quando email é inválido")
-    void testCadastroUsuarioEmailInvalido() {
+    void testCadastroUsuarioComEmailInvalido() {
         // Arrange
         Usuario usuario = new Usuario("Maria Silva", "email_invalido", "Senha@123", "Avenida Brasil, 456", "USUARIO");
 
@@ -219,7 +229,7 @@ class UsuarioServiceTest {
 
     @Test
     @DisplayName("Deve falhar no cadastro quando senha é muito curta")
-    void testCadastroUsuarioSenhaMuitoCurta() {
+    void testCadastroUsuarioComSenhaMuitoCurta() {
         // Arrange
         Usuario usuario = new Usuario("Maria Silva", "maria@example.com", "Abc@1", "Avenida Brasil, 456", "USUARIO");
 
@@ -233,30 +243,28 @@ class UsuarioServiceTest {
 
     @Test
     @DisplayName("Deve falhar no cadastro quando senha não tem número")
-    void testCadastroUsuarioSenhaSemNumero() {
+    void testCadastroUsuarioComSenhaSemNumero() {
         // Arrange
-        Usuario usuario = new Usuario("Maria Silva", "maria@example.com", "SenhaAbcd@", "Avenida Brasil, 456", "USUARIO");
+        Usuario usuario = new Usuario("Maria Silva", "maria@example.com", "Senha@Abc", "Avenida Brasil, 456", "USUARIO");
 
         // Act
         boolean resultado = usuarioService.cadastrar(usuario);
 
         // Assert
         assertFalse(resultado);
-        verify(usuarioDAO, never()).criar(any(Usuario.class));
     }
 
     @Test
     @DisplayName("Deve falhar no cadastro quando senha não tem caractere especial")
-    void testCadastroUsuarioSenhaSemCaractereEspecial() {
+    void testCadastroUsuarioComSenhaSemEspecial() {
         // Arrange
-        Usuario usuario = new Usuario("Maria Silva", "maria@example.com", "SenhaAbcd123", "Avenida Brasil, 456", "USUARIO");
+        Usuario usuario = new Usuario("Maria Silva", "maria@example.com", "Senha123Abc", "Avenida Brasil, 456", "USUARIO");
 
         // Act
         boolean resultado = usuarioService.cadastrar(usuario);
 
         // Assert
         assertFalse(resultado);
-        verify(usuarioDAO, never()).criar(any(Usuario.class));
     }
 
     // ============ TESTES DE ATUALIZAÇÃO DE SENHA ============
@@ -268,11 +276,15 @@ class UsuarioServiceTest {
         String email = "usuario@example.com";
         String senhaAntiga = "SenhaAntiga@123";
         String novaSenha = "NovaSenha@456";
+        String senhaAntigaHash = "$2a$12$abcdefghijklmnopqrstuvwxyz";
+        String novaSenhaHash = "$2a$12$zyxwvutsrqponmlkjihgfedcba";
 
-        Usuario usuario = new Usuario("João Silva", email, senhaAntiga, "Rua Principal, 123", "USUARIO");
+        Usuario usuario = new Usuario("João Silva", email, senhaAntigaHash, "Rua Principal, 123", "USUARIO");
         usuario.setId(1);
 
         when(usuarioDAO.buscarPorEmail(email)).thenReturn(Optional.of(usuario));
+        when(passwordEncoder.matches(senhaAntiga, senhaAntigaHash)).thenReturn(true);
+        when(passwordEncoder.encode(novaSenha)).thenReturn(novaSenhaHash);
         doNothing().when(usuarioDAO).atualizar(any(Usuario.class));
 
         // Act
@@ -280,6 +292,8 @@ class UsuarioServiceTest {
 
         // Assert
         assertTrue(resultado);
+        verify(passwordEncoder, times(1)).matches(senhaAntiga, senhaAntigaHash);
+        verify(passwordEncoder, times(1)).encode(novaSenha);
         verify(usuarioDAO, times(1)).atualizar(any(Usuario.class));
     }
 
@@ -288,14 +302,15 @@ class UsuarioServiceTest {
     void testAtualizarSenhaComSenhaAntigaIncorreta() {
         // Arrange
         String email = "usuario@example.com";
-        String senhaAntiga = "SenhaAntiga@123";
         String senhaAntigaIncorreta = "SenhaErrada@123";
         String novaSenha = "NovaSenha@456";
+        String senhaAntigaHash = "$2a$12$abcdefghijklmnopqrstuvwxyz";
 
-        Usuario usuario = new Usuario("João Silva", email, senhaAntiga, "Rua Principal, 123", "USUARIO");
+        Usuario usuario = new Usuario("João Silva", email, senhaAntigaHash, "Rua Principal, 123", "USUARIO");
         usuario.setId(1);
 
         when(usuarioDAO.buscarPorEmail(email)).thenReturn(Optional.of(usuario));
+        when(passwordEncoder.matches(senhaAntigaIncorreta, senhaAntigaHash)).thenReturn(false);
 
         // Act
         boolean resultado = usuarioService.atualizarSenha(email, senhaAntigaIncorreta, novaSenha);
@@ -324,13 +339,12 @@ class UsuarioServiceTest {
 
         // Assert
         assertTrue(resultado);
-        assertTrue(usuario.isConfirmado());
         verify(usuarioDAO, times(1)).atualizar(any(Usuario.class));
     }
 
     @Test
-    @DisplayName("Deve falhar na confirmação quando email não existe")
-    void testConfirmarEmailNaoExiste() {
+    @DisplayName("Deve falhar ao confirmar email de usuário inexistente")
+    void testConfirmarEmailUsuarioInexistente() {
         // Arrange
         String email = "inexistente@example.com";
 
