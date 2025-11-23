@@ -1,29 +1,41 @@
 package br.inatel.ailarica.Restaurantes;
 
-
+import br.inatel.ailarica.security.JwtTokenProvider;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
-
-
-import org.springframework.stereotype.Repository;
-import java.sql.*;
 
 @RestController
 @RequestMapping("/restaurantes")
 public class RestauranteController {
 
     private final RestauranteService service;
+    private final JwtTokenProvider jwtTokenProvider; // Injeção de segurança
 
-    public RestauranteController(RestauranteService service) {
+    public RestauranteController(RestauranteService service, JwtTokenProvider jwtTokenProvider) {
         this.service = service;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
+    // =================================================
+    // 🔓 ÁREA PÚBLICA (Qualquer um acessa)
+    // =================================================
+
+    /**
+     * Listar todos os restaurantes.
+     * Público: O cliente precisa ver a lista para escolher onde comer.
+     */
     @GetMapping
     public List<Restaurante> listarTodos() {
         return service.listarTodos();
     }
 
+    /**
+     * Buscar restaurante por ID (Ver cardápio/detalhes).
+     * Público.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<Restaurante> buscarPorId(@PathVariable int id) {
         return service.buscarPorId(id)
@@ -31,53 +43,77 @@ public class RestauranteController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public Restaurante criar(@RequestBody Restaurante novo) {
-        return service.criar(novo);
+    // OBS: O método POST (Criar) foi removido daqui pois o cadastro
+    // agora é feito exclusivamente pelo AuthController.
+
+    // =================================================
+    // 🔒 ÁREA RESTRITA (Só o Dono acessa)
+    // =================================================
+
+    /**
+     * Método auxiliar para validar se quem chama é um RESTAURANTE.
+     */
+    private Integer validarDonoRestaurante(String authHeader) {
+        String token = jwtTokenProvider.extractTokenFromHeader(authHeader);
+        if (token == null || !jwtTokenProvider.validateToken(token)) return null;
+
+        String tipo = jwtTokenProvider.getTipoFromToken(token);
+        if (!"RESTAURANTE".equals(tipo)) return null; // Bloqueia usuários comuns
+
+        return jwtTokenProvider.getIdFromToken(token);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Restaurante> atualizar(@PathVariable int id, @RequestBody Restaurante atualizado) {
-        return service.atualizar(id, atualizado)
+    /**
+     * Atualizar MEUS dados.
+     * Mudança: Rota é /me, o ID vem do token.
+     */
+    @PutMapping("/me")
+    public ResponseEntity<?> atualizarMeusDados(@RequestHeader("Authorization") String authHeader,
+                                                @RequestBody Restaurante atualizado) {
+        Integer idRestaurante = validarDonoRestaurante(authHeader);
+        if (idRestaurante == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Acesso negado.");
+        }
+
+        return service.atualizar(idRestaurante, atualizado)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable int id) {
-        if (service.deletar(id)) {
+    /**
+     * Deletar MINHA conta.
+     */
+    @DeleteMapping("/me")
+    public ResponseEntity<?> deletarMinhaConta(@RequestHeader("Authorization") String authHeader) {
+        Integer idRestaurante = validarDonoRestaurante(authHeader);
+        if (idRestaurante == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Acesso negado.");
+        }
+
+        if (service.deletar(idRestaurante)) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
     }
 
-
-
-    // ✅ Ativar restaurante
-    @PutMapping("/{id}/ativar")
-    public ResponseEntity<String> ativarRestaurante(@PathVariable int id) {
-        boolean sucesso = service.atualizarStatus(id, true);
-        if (sucesso) {
-            return ResponseEntity.ok("✅ Restaurante ativado com sucesso!");
+    /**
+     * Abrir/Fechar loja (Alternar status).
+     * Simplifiquei: Um único endpoint que inverte o status atual.
+     */
+    @PutMapping("/me/funcionamento")
+    public ResponseEntity<String> alternarFuncionamento(@RequestHeader("Authorization") String authHeader) {
+        Integer idRestaurante = validarDonoRestaurante(authHeader);
+        if (idRestaurante == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Acesso negado.");
         }
-        return ResponseEntity.notFound().build();
-    }
 
-    // 🚫 Desativar restaurante
-    @PutMapping("/{id}/desativar")
-    public ResponseEntity<String> desativarRestaurante(@PathVariable int id) {
-        boolean sucesso = service.atualizarStatus(id, false);
-        if (sucesso) {
-            return ResponseEntity.ok("🚫 Restaurante desativado com sucesso!");
+        boolean alterou = service.alternar(idRestaurante);
+        if (alterou) {
+            // Buscamos o estado atual para dar uma mensagem bonitinha
+            boolean estaAberto = service.buscarPorId(idRestaurante).map(Restaurante::isAtivo).orElse(false);
+            String statusTexto = estaAberto ? "ABERTO" : "FECHADO";
+            return ResponseEntity.ok("Restaurante agora está: " + statusTexto);
         }
-        return ResponseEntity.notFound().build();
-    }
-
-    // 🔁 Alternar status (toggle)
-    @PutMapping("/{id}/alternar")
-    public ResponseEntity<String> alternar(@PathVariable int id) {
-        return service.alternar(id)
-                ? ResponseEntity.ok("Status do restaurante alternado!")
-                : ResponseEntity.status(404).body("Restaurante não encontrado!");
+        return ResponseEntity.status(404).body("Erro ao alterar status.");
     }
 }

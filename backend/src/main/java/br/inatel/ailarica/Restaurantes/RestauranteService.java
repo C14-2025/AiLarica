@@ -1,5 +1,6 @@
 package br.inatel.ailarica.Restaurantes;
 
+import br.inatel.ailarica.security.PasswordEncoder; // <--- NOVO IMPORT
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -8,36 +9,46 @@ import java.util.Optional;
 public class RestauranteService {
 
     private final RestauranteDAO restauranteDAO;
+    private final PasswordEncoder passwordEncoder; // <--- NOVO CAMPO
 
-    public RestauranteService(RestauranteDAO restauranteDAO) {
+    // Construtor atualizado para receber o PasswordEncoder
+    public RestauranteService(RestauranteDAO restauranteDAO, PasswordEncoder passwordEncoder) {
         this.restauranteDAO = restauranteDAO;
+        this.passwordEncoder = passwordEncoder; // <--- SALVANDO O OBJETO
     }
 
     // Criar novo restaurante
     public Restaurante criar(Restaurante novo) {
-        // 1. O método 'restauranteDAO.criar()' não é mais 'void'.
-        //    Ele retorna o objeto 'Restaurante' atualizado (com o ID).
-        //    Nós precisamos capturar esse retorno.
-        Restaurante restauranteCriado = restauranteDAO.criar(novo);
 
-        // 2. Retorna o objeto que o DAO acabou de criar e atualizar.
+        // --- CORREÇÃO DE SEGURANÇA AQUI ---
+        String senhaPura = novo.getSenha();
+        String senhaHash = passwordEncoder.encode(senhaPura); // 1. Criptografa
+        novo.setSenha(senhaHash); // 2. Substitui a senha pura pelo hash
+        // ----------------------------------
+
+        Restaurante restauranteCriado = restauranteDAO.criar(novo);
         return restauranteCriado;
     }
 
-    // Listar todos (incluindo pratos)
+    // Listar todos (sem alteração)
     public List<Restaurante> listarTodos() {
         return restauranteDAO.listarTodos();
     }
 
-    // Buscar por id
+    // Buscar por id (sem alteração)
     public Optional<Restaurante> buscarPorId(int id) {
         return Optional.ofNullable(restauranteDAO.buscarPorId(id));
     }
 
-    // Atualizar
+    // Atualizar (sem alteração)
     public Optional<Restaurante> atualizar(int id, Restaurante atualizado) {
         Restaurante existente = restauranteDAO.buscarPorId(id);
         if (existente != null) {
+
+            // ATENÇÃO: Se o frontend mandar a senha pura aqui, ela deve ser tratada
+            // Mas, por enquanto, vamos assumir que a atualização de senha é feita
+            // pelo RestauranteAuthService.atualizarSenha() para segurança.
+
             atualizado.setIdRestaurante(id);
             restauranteDAO.atualizar(atualizado);
             return Optional.of(atualizado);
@@ -45,11 +56,12 @@ public class RestauranteService {
         return Optional.empty();
     }
 
+    // ... (restante do código omitido por ser igual)
     // Deletar
     public boolean deletar(int id) {
         Restaurante existente = restauranteDAO.buscarPorId(id);
         if (existente != null) {
-            restauranteDAO.deletar(id); // O DAO já lida com a exclusão dos pratos
+            restauranteDAO.deletar(id);
             return true;
         }
         return false;
