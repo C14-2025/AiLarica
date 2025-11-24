@@ -127,7 +127,6 @@ const handleLogin = async () => {
       email: email.value,
       senha: senha.value,
       tipo: userType.value === 'user' ? 'USUARIO' : 'RESTAURANTE',
-      // ✅ CORREÇÃO 3: Incluir 'endereco' com valor dummy para satisfazer o Jackson/Java DTO
       endereco: userType.value === 'user' ? 'Endereço Não Requerido no Login' : 'N/A'
     };
 
@@ -143,10 +142,12 @@ const handleLogin = async () => {
     }
 
   } catch (error) {
-    // A correção para o tratamento de erro já foi feita no authService.ts
+    // ✅ CORREÇÃO AQUI: Não precisamos mais do alerta genérico
     console.error("Erro no login:", error);
-    // Nota: A mensagem de erro específica do backend virá via console.error no AuthService
-    alert("Houve um erro. Verifique email e senha.");
+
+    // ⚠️ Esta linha é crítica: Se houve um erro (catch), retornamos imediatamente
+    // para garantir que o manipulador de evento termine sem acionar o F5.
+    return;
   }
 };
 </script>

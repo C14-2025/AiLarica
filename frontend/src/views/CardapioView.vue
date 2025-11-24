@@ -4,7 +4,7 @@
     <header class="bg-red-600 shadow-xl shadow-red-600/30 sticky top-0 z-50 custom-slide-down">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex items-center justify-between">
         <div class="flex items-center space-x-4">
-          <button 
+          <button
             @click="goBack"
             class="text-white hover:bg-red-700 p-2 rounded-lg transition-colors duration-200"
             title="Voltar ao Dashboard"
@@ -26,9 +26,9 @@
           <!-- Busca por Nome -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Buscar por Nome</label>
-            <input 
+            <input
               v-model="searchQuery"
-              type="text" 
+              type="text"
               placeholder="Ex: Pizza, Hambúrguer..."
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all"
             />
@@ -37,7 +37,7 @@
           <!-- Filtro de Disponibilidade -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por Status</label>
-            <select 
+            <select
               v-model="availabilityFilter"
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all"
             >
@@ -50,7 +50,7 @@
           <!-- Ordenação -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Ordenar por</label>
-            <select 
+            <select
               v-model="sortBy"
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all"
             >
@@ -99,8 +99,8 @@
 
       <!-- Items Grid -->
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div 
-          v-for="item in filteredItems" 
+        <div
+          v-for="item in filteredItems"
           :key="item.id"
           class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group"
           :class="{ 'opacity-60': !item.available }"
@@ -108,16 +108,16 @@
           <!-- Imagem do Prato -->
           <div class="relative h-48 bg-linear-to-br from-red-100 to-red-50 flex items-center justify-center overflow-hidden">
             <div class="text-6xl group-hover:scale-110 transition-transform duration-300">🍽️</div>
-            
+
             <!-- Badge de Disponibilidade -->
             <div class="absolute top-3 right-3">
-              <span 
+              <span
                 v-if="item.available"
                 class="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold"
               >
                 Disponível
               </span>
-              <span 
+              <span
                 v-else
                 class="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold"
               >
@@ -152,18 +152,18 @@
 
             <!-- Ações -->
             <div class="flex gap-3">
-              <button 
+              <button
                 @click="editItem(item)"
                 class="flex-1 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200"
               >
                 ✏️ Editar
               </button>
-              <button 
+              <button
                 @click="toggleAvailability(item)"
                 :class="[
                   'flex-1 px-4 py-2 font-semibold rounded-lg transition-colors duration-200',
-                  item.available 
-                    ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                  item.available
+                    ? 'bg-red-100 text-red-600 hover:bg-red-200'
                     : 'bg-green-100 text-green-600 hover:bg-green-200'
                 ]"
               >
@@ -175,12 +175,12 @@
       </div>
 
       <!-- Modal de Edição -->
-      <div 
+      <div
         v-if="showEditModal"
         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
         @click="closeEditModal"
       >
-        <div 
+        <div
           class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6"
           @click.stop
         >
@@ -190,7 +190,7 @@
             <!-- Nome -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-              <input 
+              <input
                 v-model="editingItem.name"
                 type="text"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
@@ -200,7 +200,7 @@
             <!-- Descrição -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
-              <textarea 
+              <textarea
                 v-model="editingItem.description"
                 rows="3"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
@@ -210,7 +210,7 @@
             <!-- Preço -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Preço (R$)</label>
-              <input 
+              <input
                 v-model.number="editingItem.price"
                 type="number"
                 step="0.01"
@@ -220,7 +220,7 @@
 
             <!-- Disponibilidade -->
             <div class="flex items-center gap-3">
-              <input 
+              <input
                 v-model="editingItem.available"
                 type="checkbox"
                 id="available"
@@ -232,13 +232,13 @@
 
           <!-- Botões -->
           <div class="flex gap-3 mt-6">
-            <button 
+            <button
               @click="closeEditModal"
               class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors duration-200"
             >
               Cancelar
             </button>
-            <button 
+            <button
               @click="saveEditedItem"
               :disabled="savingItem"
               class="flex-1 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -256,19 +256,34 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import AuthService from '@/services/authService'; // Serviço de Auth
 
+// --- Interfaces ---
 interface MenuItem {
   id: string;
   name: string;
   description: string;
   price: number;
-  available: boolean;
+  available: boolean; // Mapeia para 'ativo' no backend
   salesCount: number;
 }
+// ------------------
 
 const router = useRouter();
-const RESTAURANT_ID = 1;
 const API_BASE_URL = 'http://localhost:8080';
+
+// --- JWT/Token Setup ---
+const token = AuthService.getToken();
+const currentUser = AuthService.getCurrentUser();
+const headers = { 'Authorization': `Bearer ${token}` };
+
+// ✅ Guarda: Verifica se o usuário é válido e é um RESTAURANTE
+if (!token || currentUser?.tipo !== 'RESTAURANTE') {
+  AuthService.logout();
+  if (!token) router.push('/login');
+}
+const RESTAURANT_ID_FROM_TOKEN = currentUser?.id || 0;
+// -----------------------
 
 const items = ref<MenuItem[]>([]);
 const loading = ref(false);
@@ -290,30 +305,45 @@ const goBack = () => {
   router.push('/restaurante/dashboard');
 };
 
+/**
+ * Busca os itens do cardápio do restaurante logado.
+ */
 const fetchMenuItems = async () => {
   loading.value = true;
+  if (!token) {
+    loading.value = false;
+    return;
+  }
+
   try {
-    const response = await axios.get(`${API_BASE_URL}/restaurantes/${RESTAURANT_ID}/pratos`);
+    // ✅ Rota Pública de Leitura, mas usando o ID do token e passando o token (melhor rastreamento)
+    const response = await axios.get(`${API_BASE_URL}/restaurantes/${RESTAURANT_ID_FROM_TOKEN}/pratos`, { headers });
     items.value = response.data.map((prato: any) => ({
       id: prato.id?.toString() || prato.idPrato?.toString(),
       name: prato.nome,
       description: prato.descricao,
       price: prato.preco,
-      available: prato.ativo,
-      salesCount: Math.floor(Math.random() * 50) // Simulando dados de vendas
+      available: prato.ativo, // Mapeamento direto
+      salesCount: Math.floor(Math.random() * 50) // Mock
     }));
   } catch (error) {
     console.error('Erro ao buscar itens do cardápio:', error);
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      AuthService.logout();
+    }
     items.value = [];
   } finally {
     loading.value = false;
   }
 };
 
+/**
+ * Lógica de Filtro, Busca e Ordenação na memória (Computed Property)
+ */
 const filteredItems = computed(() => {
   let result = [...items.value];
 
-  // Filtrar por busca
+  // Filtrar por busca (Nome ou Descrição)
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
     result = result.filter(item =>
@@ -343,9 +373,10 @@ const filteredItems = computed(() => {
         return a.name.localeCompare(b.name);
     }
   });
-
   return result;
 });
+
+// --- Funções de Ação e Edição ---
 
 const formatPrice = (price: number | undefined): string => {
   if (!price) return '0,00';
@@ -353,6 +384,7 @@ const formatPrice = (price: number | undefined): string => {
 };
 
 const editItem = (item: MenuItem) => {
+  // Cria uma cópia profunda para o modal
   editingItem.value = { ...item };
   showEditModal.value = true;
 };
@@ -360,27 +392,25 @@ const editItem = (item: MenuItem) => {
 const closeEditModal = () => {
   showEditModal.value = false;
   editingItem.value = {
-    id: '',
-    name: '',
-    description: '',
-    price: 0,
-    available: true,
-    salesCount: 0
+    id: '', name: '', description: '', price: 0, available: true, salesCount: 0
   };
 };
 
 const saveEditedItem = async () => {
   savingItem.value = true;
+  if (!token) { savingItem.value = false; return; }
+
   try {
-    // Enviar atualização para o backend
+    // ✅ ROTA SEGURA: PUT /painel-restaurante/pratos/{idPrato}
     await axios.put(
-      `${API_BASE_URL}/restaurantes/${RESTAURANT_ID}/pratos/${editingItem.value.id}`,
+      `${API_BASE_URL}/painel-restaurante/pratos/${editingItem.value.id}`,
       {
         nome: editingItem.value.name,
         descricao: editingItem.value.description,
         preco: editingItem.value.price,
-        ativo: editingItem.value.available
-      }
+        ativo: editingItem.value.available // Envia o novo status 'available'
+      },
+      { headers } // ✅ Adiciona o token
     );
 
     // Atualizar item localmente
@@ -393,25 +423,28 @@ const saveEditedItem = async () => {
     alert('Prato atualizado com sucesso!');
   } catch (error) {
     console.error('Erro ao atualizar prato:', error);
-    alert('Erro ao atualizar o prato. Tente novamente.');
+    alert('Erro ao atualizar o prato. Verifique se o Backend foi reiniciado com o último DAO corrigido.');
   } finally {
     savingItem.value = false;
   }
 };
 
 const toggleAvailability = async (item: MenuItem) => {
+  if (!token) return;
+
   try {
     const newStatus = !item.available;
-    
-    // Enviar atualização para o backend
+
+    // ✅ ROTA SEGURA: PUT /painel-restaurante/pratos/{idPrato}
     await axios.put(
-      `${API_BASE_URL}/restaurantes/${RESTAURANT_ID}/pratos/${item.id}`,
+      `${API_BASE_URL}/painel-restaurante/pratos/${item.id}`,
       {
         nome: item.name,
         descricao: item.description,
         preco: item.price,
-        ativo: newStatus
-      }
+        ativo: newStatus // Envia o novo status
+      },
+      { headers } // ✅ Adiciona o token
     );
 
     // Atualizar item localmente
@@ -423,7 +456,10 @@ const toggleAvailability = async (item: MenuItem) => {
 };
 
 onMounted(() => {
-  fetchMenuItems();
+  // Apenas faz fetch se o token existir (após o guard)
+  if (token) {
+    fetchMenuItems();
+  }
 });
 </script>
 
