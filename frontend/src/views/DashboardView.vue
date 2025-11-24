@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 custom-dashboard-bg">
+  <div class="min-h-screen bg-gray-200 dark:bg-gray-200 custom-dashboard-bg">
     
     <header class="bg-red-600 shadow-xl shadow-red-600/30 sticky top-0 z-50 custom-slide-down">
       
@@ -85,7 +85,7 @@
           <div class="custom-card-animated" style="--animation-delay: 0.3s;">
             <MenuOverview
               :items="menuItems"
-              @viewAll="goToPedidos"
+              @viewAll="goToCardapio"
             />
           </div>
         </div>
@@ -234,6 +234,10 @@ const toggleRestaurantStatus = async () => {
 
 const goToPedidos = () => {
   router.push('/restaurante/pedidos');
+};
+
+const goToCardapio = () => {
+  router.push('/restaurante/cardapio');
 };
 
 // --- Funções de Carregamento de Dados ---
