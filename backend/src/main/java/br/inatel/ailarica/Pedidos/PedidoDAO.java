@@ -1,5 +1,6 @@
 package br.inatel.ailarica.Pedidos;
 
+import br.inatel.ailarica.Restaurantes.DashboardDTO; // Import novo
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.time.LocalDate; // Import novo para data
 import java.util.List;
 import java.util.Objects;
 
@@ -15,14 +17,13 @@ import java.util.Objects;
 public class PedidoDAO {
 
     private final JdbcTemplate jdbcTemplate;
-    private final ItemPedidoDAO itemPedidoDAO; // Injeta o outro DAO
+    private final ItemPedidoDAO itemPedidoDAO;
 
     public PedidoDAO(JdbcTemplate jdbcTemplate, ItemPedidoDAO itemPedidoDAO) {
         this.jdbcTemplate = jdbcTemplate;
         this.itemPedidoDAO = itemPedidoDAO;
     }
 
-    // RowMapper para o Pedido (NÃO busca os itens, só o cabeçalho)
     private final RowMapper<Pedido> pedidoRowMapper = (rs, rowNum) -> {
         Pedido p = new Pedido();
         p.setIdPedido(rs.getInt("idPedido"));
@@ -34,12 +35,10 @@ public class PedidoDAO {
         return p;
     };
 
-    // CREATE: Salva o Pedido (cabeçalho) e depois salva os Itens (corpo)
     public Pedido criar(Pedido pedido) {
         String sqlPedido = "INSERT INTO pedido (status, valorTotal, dataHora, idUsuario, idRestaurante) VALUES (?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
-        // 1. Salva o "cabeçalho" do pedido
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sqlPedido, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, pedido.getStatus());
@@ -50,66 +49,96 @@ public class PedidoDAO {
             return ps;
         }, keyHolder);
 
-        // 2. Pega o ID gerado para o pedido
         int idPedido = Objects.requireNonNull(keyHolder.getKey()).intValue();
         pedido.setIdPedido(idPedido);
 
-        // 3. Salva os "itens" do pedido (o corpo)
         for (ItemPedido item : pedido.getItens()) {
-            item.setIdPedido(idPedido); // Seta o ID do pedido no item
-            itemPedidoDAO.criar(item); // Salva o item
+            item.setIdPedido(idPedido);
+            itemPedidoDAO.criar(item);
         }
 
-        return pedido; // Retorna o pedido completo com o ID
+        return pedido;
     }
 
-    // READ: Busca um pedido pelo ID
     public Pedido buscarPorId(int idPedido) {
         String sql = "SELECT * FROM pedido WHERE idPedido = ?";
         try {
-            // 1. Busca o "cabeçalho"
             Pedido pedido = jdbcTemplate.queryForObject(sql, pedidoRowMapper, idPedido);
-
             if (pedido != null) {
-                // 2. Busca os "itens" e anexa ao objeto
                 List<ItemPedido> itens = itemPedidoDAO.listarPorPedido(idPedido);
                 pedido.setItens(itens);
             }
             return pedido;
         } catch (Exception e) {
-            return null; // Não encontrado
+            return null;
         }
     }
 
-    // READ: Listar pedidos de um RESTAURANTE (para o seu wireframe)
     public List<Pedido> listarPorRestaurante(int idRestaurante) {
         String sql = "SELECT * FROM pedido WHERE idRestaurante = ?";
-        // 1. Busca todos os "cabeçalhos" de pedido
         List<Pedido> pedidos = jdbcTemplate.query(sql, pedidoRowMapper, idRestaurante);
-
-        // 2. Para cada pedido, busca seus itens
         for (Pedido p : pedidos) {
-            List<ItemPedido> itens = itemPedidoDAO.listarPorPedido(p.getIdPedido());
-            p.setItens(itens);
+            p.setItens(itemPedidoDAO.listarPorPedido(p.getIdPedido()));
         }
         return pedidos;
     }
 
-    // READ: Listar pedidos de um USUARIO
     public List<Pedido> listarPorUsuario(int idUsuario) {
         String sql = "SELECT * FROM pedido WHERE idUsuario = ?";
         List<Pedido> pedidos = jdbcTemplate.query(sql, pedidoRowMapper, idUsuario);
-
         for (Pedido p : pedidos) {
-            List<ItemPedido> itens = itemPedidoDAO.listarPorPedido(p.getIdPedido());
-            p.setItens(itens);
+            p.setItens(itemPedidoDAO.listarPorPedido(p.getIdPedido()));
         }
         return pedidos;
     }
 
-    // UPDATE: Atualizar o STATUS de um pedido (Funcionalidade 5)
     public void atualizarStatus(int idPedido, String novoStatus) {
         String sql = "UPDATE pedido SET status = ? WHERE idPedido = ?";
         jdbcTemplate.update(sql, novoStatus, idPedido);
+    }
+
+    // ==========================================
+    // 📊 MÉTODOS NOVOS PARA O DASHBOARD 📊
+    // ==========================================
+
+    // 1. Contar pedidos de HOJE
+    public int contarPedidosHoje(int idRestaurante) {
+        String hoje = LocalDate.now().toString(); // Ex: "2025-11-23"
+
+        // O LIKE '2025-11-23%' garante que pegamos qualquer hora do dia
+        String sql = "SELECT COUNT(*) FROM pedido WHERE idRestaurante = ? AND dataHora LIKE ?";
+
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, idRestaurante, hoje + "%");
+        return count != null ? count : 0;
+    }
+
+    // 2. Somar Faturamento de HOJE (Ignora Cancelados)
+    public Double somarFaturamentoHoje(int idRestaurante) {
+        String hoje = LocalDate.now().toString();
+
+        String sql = "SELECT SUM(valorTotal) FROM pedido WHERE idRestaurante = ? AND status != 'CANCELADO' AND dataHora LIKE ?";
+
+        Double total = jdbcTemplate.queryForObject(sql, Double.class, idRestaurante, hoje + "%");
+        return (total != null) ? total : 0.0;
+    }
+
+    // 3. Dados para o Gráfico (Últimos 7 dias)
+    public List<DashboardDTO.VendaDiaria> buscarVendasUltimos7Dias(int idRestaurante) {
+        // SQLITE: substr(dataHora, 1, 10) pega só a parte da data (YYYY-MM-DD)
+        // Agrupa por dia e soma o total
+        String sql = """
+            SELECT substr(dataHora, 1, 10) as dia, SUM(valorTotal) as total
+            FROM pedido
+            WHERE idRestaurante = ? 
+            AND status != 'CANCELADO'
+            GROUP BY dia
+            ORDER BY dia DESC
+            LIMIT 7
+        """;
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> new DashboardDTO.VendaDiaria(
+                rs.getString("dia"),
+                rs.getDouble("total")
+        ), idRestaurante);
     }
 }
