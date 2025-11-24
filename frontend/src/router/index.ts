@@ -53,6 +53,12 @@ const router = createRouter({
       meta: { requiresAuth: true, role: 'USUARIO' }
     },
     {
+      path: '/usuario/restaurante/:id',
+      name: 'usuario-restaurante-detalhes',
+      component: () => import('../views/RestaurantDetailsView.vue'),
+      meta: { requiresAuth: true, role: 'USUARIO' }
+    },
+    {
       path: '/usuario/pedidos',
       name: 'usuario-pedidos',
       component: UserPedidosView,

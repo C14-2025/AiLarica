@@ -180,8 +180,9 @@ const fetchRestaurantes = async () => {
   }
 };
 
+// ✅ CORREÇÃO AQUI: Navegação direta sem alerta
 const verCardapio = (id: number) => {
-  alert(`Você clicou no restaurante ID: ${id}. A tela de cardápio do cliente será a próxima!`);
+  router.push(`/usuario/restaurante/${id}`);
 };
 
 const logout = () => {
