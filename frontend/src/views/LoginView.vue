@@ -10,7 +10,6 @@
         </p>
       </div>
 
-      <!-- Toggle entre Usuário e Restaurante -->
       <div class="flex mb-6 rounded-lg bg-gray-200 p-1">
         <button
           @click="userType = 'user'"
@@ -48,7 +47,7 @@
               type="email"
               autocomplete="email"
               required
-              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+              v-model="email" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
             />
           </div>
         </div>
@@ -64,7 +63,7 @@
               type="password"
               autocomplete="current-password"
               required
-              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+              v-model="senha" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
             />
           </div>
         </div>
@@ -112,20 +111,44 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref } from 'vue';
+import AuthService from '@/services/authService';
+import { useRouter } from 'vue-router';
 
-const userType = ref<'user' | 'restaurant'>('user')
-const router = useRouter()
+const router = useRouter();
 
-const handleLogin = () => {
-  console.log(`Tentativa de login como ${userType.value}`)
-  // Lógica de login (apenas frontend, então apenas log)
-  // Redireciona para o dashboard do restaurante quando fizer login como restaurante
-  if (userType.value === 'restaurant') {
-    router.push('/restaurante/dashboard')
+const userType = ref<'user' | 'restaurant'>('user');
+const email = ref("");
+const senha = ref("");
+
+const handleLogin = async () => {
+  try {
+    const body = {
+      email: email.value,
+      senha: senha.value,
+      tipo: userType.value === 'user' ? 'USUARIO' : 'RESTAURANTE',
+      // ✅ CORREÇÃO 3: Incluir 'endereco' com valor dummy para satisfazer o Jackson/Java DTO
+      endereco: userType.value === 'user' ? 'Endereço Não Requerido no Login' : 'N/A'
+    };
+
+    const response = await AuthService.login(body);
+
+    console.log("Login bem-sucedido!", response);
+    console.log("Usuário logado:", response.nome, " | Tipo:", response.tipo);
+
+    if (userType.value === 'restaurant') {
+      router.push('/restaurante/dashboard');
+    } else {
+      router.push('/usuario/dashboard');
+    }
+
+  } catch (error) {
+    // A correção para o tratamento de erro já foi feita no authService.ts
+    console.error("Erro no login:", error);
+    // Nota: A mensagem de erro específica do backend virá via console.error no AuthService
+    alert("Houve um erro. Verifique email e senha.");
   }
-}
+};
 </script>
 
 <style scoped>
