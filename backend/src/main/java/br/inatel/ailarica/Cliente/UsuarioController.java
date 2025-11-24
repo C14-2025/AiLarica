@@ -12,47 +12,33 @@ import java.util.Optional;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
-    private final JwtTokenProvider jwtTokenProvider; // Injeção de Segurança
+    private final JwtTokenProvider jwtTokenProvider;
 
     public UsuarioController(UsuarioService usuarioService, JwtTokenProvider jwtTokenProvider) {
         this.usuarioService = usuarioService;
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    /**
-     * Cadastro de Usuário.
-     * ACESSO: PÚBLICO (Não precisa de token para criar conta)
-     */
     @PostMapping("/cadastro")
     public ResponseEntity<String> cadastrar(@RequestBody Usuario novoUsuario) {
-        // O service já criptografa a senha e valida
         if (usuarioService.cadastrar(novoUsuario)) {
             return ResponseEntity.status(HttpStatus.CREATED).body("Usuário cadastrado com sucesso!");
         }
-        return ResponseEntity.badRequest().body("Email já cadastrado ou dados inválidos (senha fraca/email inválido).");
+        return ResponseEntity.badRequest().body("Email já cadastrado ou dados inválidos.");
     }
 
-    /**
-     * Atualizar Senha.
-     * ACESSO: RESTRITO (Exige Token)
-     * Segurança: O email é extraído do token, impedindo alterar senha de outros.
-     */
     @PutMapping("/senha")
     public ResponseEntity<String> atualizarSenha(@RequestHeader("Authorization") String authHeader,
                                                  @RequestBody SenhaUpdateRequest updateRequest) {
-
-        // 1. Validar Token
         String token = jwtTokenProvider.extractTokenFromHeader(authHeader);
         if (token == null || !jwtTokenProvider.validateToken(token)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido ou expirado.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido.");
         }
 
-        // 2. Extrair o email do dono do token
         String emailDoToken = jwtTokenProvider.getEmailFromToken(token);
 
-        // 3. Tentar atualizar
         boolean atualizou = usuarioService.atualizarSenha(
-                emailDoToken, // Usa o email do token (seguro), ignora o do JSON se houver
+                emailDoToken,
                 updateRequest.getSenhaAntiga(),
                 updateRequest.getNovaSenha()
         );
@@ -60,15 +46,10 @@ public class UsuarioController {
         if (atualizou) {
             return ResponseEntity.ok("Senha atualizada com sucesso!");
         } else {
-            return ResponseEntity.badRequest().body("Senha antiga incorreta ou nova senha não cumpre os requisitos.");
+            return ResponseEntity.badRequest().body("Senha antiga incorreta ou nova senha inválida.");
         }
     }
 
-    /**
-     * Obter meus dados (Perfil).
-     * ACESSO: RESTRITO (Exige Token)
-     * Novo endpoint útil para o Frontend pegar dados do usuário logado.
-     */
     @GetMapping("/me")
     public ResponseEntity<?> getMeuPerfil(@RequestHeader("Authorization") String authHeader) {
         String token = jwtTokenProvider.extractTokenFromHeader(authHeader);
@@ -80,7 +61,6 @@ public class UsuarioController {
         Optional<Usuario> usuario = usuarioService.buscarPorId(id);
 
         if (usuario.isPresent()) {
-            // Remove a senha antes de devolver o JSON para segurança
             Usuario u = usuario.get();
             u.setSenha("PROTEGIDA");
             return ResponseEntity.ok(u);
@@ -88,12 +68,28 @@ public class UsuarioController {
         return ResponseEntity.notFound().build();
     }
 
-    // DTO para atualização de senha
+    // ✅ NOVO ENDPOINT: Atualizar dados cadastrais (Nome, Endereço)
+    @PutMapping("/me")
+    public ResponseEntity<String> atualizarMeusDados(@RequestHeader("Authorization") String authHeader,
+                                                     @RequestBody Usuario dadosAtualizados) {
+        String token = jwtTokenProvider.extractTokenFromHeader(authHeader);
+        if (token == null || !jwtTokenProvider.validateToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido.");
+        }
+
+        Integer id = jwtTokenProvider.getIdFromToken(token);
+
+        // Chama o novo método do Service
+        if (usuarioService.atualizarDados(id, dadosAtualizados)) {
+            return ResponseEntity.ok("Dados atualizados com sucesso!");
+        }
+
+        return ResponseEntity.badRequest().body("Erro ao atualizar dados.");
+    }
+
     public static class SenhaUpdateRequest {
         private String senhaAntiga;
         private String novaSenha;
-
-        // Getters e Setters
         public String getSenhaAntiga() { return senhaAntiga; }
         public void setSenhaAntiga(String senhaAntiga) { this.senhaAntiga = senhaAntiga; }
         public String getNovaSenha() { return novaSenha; }
