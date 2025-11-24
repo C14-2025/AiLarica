@@ -54,6 +54,8 @@ const cartCount = ref(2); // Será substituído por store reativa
 const logout = () => {
   if (confirm('Tem certeza que deseja sair?')) {
     localStorage.removeItem('token');
+    localStorage.removeItem('userType');
+    localStorage.removeItem('userEmail');
     router.push({ name: 'login' });
   }
 };
