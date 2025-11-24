@@ -164,15 +164,14 @@ const goToCardapio = () => router.push('/restaurante/cardapio');
 const fetchMetricsAndData = async () => {
   isLoading.value = true;
 
+  // 1. Dashboard DTO
   try {
     const dashResponse = await axios.get(`${API_BASE_URL}/painel-restaurante/dashboard`, { headers });
     const data = dashResponse.data;
 
     stats.value.ordersToday = data.pedidosHoje || 0;
-
     stats.value.revenueToday = Number(data.faturamentoHoje) || 0.00;
     stats.value.rating = Number(data.avaliacaoMedia) || 0.0;
-
     stats.value.avgTime = data.tempoMedio || '0 min';
 
     salesData.value = data.vendasSemanais?.map((item: any) => ({
@@ -191,6 +190,7 @@ const fetchMetricsAndData = async () => {
     }
   }
 
+  // 2. Pedidos Recentes
   try {
     const response = await axios.get(`${API_BASE_URL}/painel-restaurante/pedidos-ativos`, { headers });
     recentOrders.value = response.data.slice(0, 3).map((pedido: any) => ({
@@ -204,12 +204,16 @@ const fetchMetricsAndData = async () => {
     console.error('Erro ao buscar pedidos recentes:', error);
   }
 
+  // 3. Cardápio (CORRIGIDO AQUI)
   try {
     const response = await axios.get(`${API_BASE_URL}/restaurantes/${RESTAURANT_ID_FROM_TOKEN}/pratos`);
+
     menuItems.value = response.data.slice(0, 5).map((prato: any) => ({
       id: prato.idPrato?.toString(),
       name: prato.nome,
       price: prato.preco,
+      // ✅ AQUI ESTAVA O ERRO: Adicionamos a propriedade 'available'
+      available: prato.disponivel
     }));
   } catch (error) {
     console.error('Erro ao buscar cardápio:', error);
@@ -224,10 +228,8 @@ const toggleRestaurantStatus = async () => {
 
   try {
     await axios.put(`${API_BASE_URL}/restaurantes/me/funcionamento`, {}, { headers });
-
     restaurantData.value.isOpen = !restaurantData.value.isOpen;
-
-    fetchMetricsAndData();
+    fetchMetricsAndData(); // Recarrega para garantir sincronia
   } catch (error) {
     console.error('Erro ao alternar status:', error);
     alert('Erro ao alternar status do restaurante.');
