@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <!-- Header -->
     <header class="bg-red-600 shadow-xl shadow-red-600/30 sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex items-center justify-between">
         <div class="flex items-center space-x-4">
@@ -20,10 +19,8 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-      <!-- Filtros e Busca -->
       <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- Busca por ID -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Buscar por ID</label>
             <input
@@ -34,7 +31,6 @@
             />
           </div>
 
-          <!-- Filtro de Status -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por Status</label>
             <select
@@ -50,7 +46,6 @@
             </select>
           </div>
 
-          <!-- Ordenação -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Ordenar por</label>
             <select
@@ -66,38 +61,28 @@
         </div>
       </div>
 
-      <!-- Loading State -->
       <div v-if="loading" class="space-y-4">
         <div v-for="i in 5" :key="i" class="bg-white rounded-xl shadow-lg p-6 animate-pulse">
           <div class="h-24 bg-gray-200 rounded-lg"></div>
         </div>
       </div>
 
-      <!-- Empty State -->
       <div v-else-if="filteredOrders.length === 0" class="bg-white rounded-xl shadow-lg p-12 text-center">
         <div class="text-6xl mb-4">📭</div>
         <h3 class="text-xl font-semibold text-gray-800 mb-2">Nenhum pedido encontrado</h3>
         <p class="text-gray-500">Tente ajustar seus filtros ou aguarde novos pedidos.</p>
       </div>
 
-      <!-- Orders Grid -->
       <div v-else class="space-y-4">
-<<<<<<< HEAD
-        <div 
-          v-for="order in filteredOrders" 
-          :key="order.id || order.idPedido"
-=======
         <div
           v-for="order in filteredOrders"
           :key="resolveOrderId(order)"
->>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
           class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden"
         >
           <div class="p-6">
-            <!-- Header do Pedido -->
             <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 pb-4 border-b border-gray-200">
               <div>
-                <h3 class="text-lg font-bold text-gray-900">Pedido #{{ order.id || order.idPedido }}</h3>
+                <h3 class="text-lg font-bold text-gray-900">Pedido #{{ resolveOrderId(order) }}</h3>
                 <p class="text-sm text-gray-500 mt-1">
                   {{ formatDateTime(order.time || order.dataHora) }}
                 </p>
@@ -112,7 +97,6 @@
               </div>
             </div>
 
-            <!-- Informações do Cliente -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div class="bg-gray-50 p-4 rounded-lg">
                 <p class="text-xs font-semibold text-gray-600 uppercase mb-2">Cliente</p>
@@ -128,17 +112,11 @@
               </div>
             </div>
 
-            <!-- Itens do Pedido -->
             <div v-if="(order.items || order.itens)?.length > 0" class="mb-6 bg-gray-50 rounded-lg p-4">
               <p class="text-sm font-semibold text-gray-700 mb-3">Detalhes dos Itens:</p>
               <ul class="space-y-2">
-<<<<<<< HEAD
-                <li 
-                  v-for="(item, index) in (order.items || order.itens)" 
-=======
                 <li
                   v-for="(item, index) in (order.items ?? order.itens ?? [])"
->>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
                   :key="index"
                   class="flex justify-between items-center text-sm text-gray-700"
                 >
@@ -148,48 +126,35 @@
               </ul>
             </div>
 
-            <!-- Ações -->
             <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
               <button
                 v-if="canUpdateStatus(order.status)"
-                @click="updateOrderStatus(order.id || order.idPedido, getNextStatus(order.status))"
-                :disabled="updatingOrderId === (order.id || order.idPedido)"
+                @click="updateOrderStatus(resolveOrderId(order), getNextStatus(order.status))"
+                :disabled="updatingOrderId === resolveOrderId(order)"
                 class="flex-1 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span v-if="updatingOrderId === (order.id || order.idPedido)" class="inline-block mr-2">⏳</span>
+                <span v-if="updatingOrderId === resolveOrderId(order)" class="inline-block mr-2">⏳</span>
                 {{ getNextStatusText(order.status) }}
               </button>
-<<<<<<< HEAD
-              
-              <button 
-                @click="toggleOrderDetails(order.id || order.idPedido)"
-=======
 
               <button
                 @click="toggleOrderDetails(resolveOrderId(order))"
->>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
                 class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors duration-200"
               >
-                {{ expandedOrderId === (order.id || order.idPedido) ? '▼ Ocultar' : '▶ Detalhes' }}
+                {{ expandedOrderId === resolveOrderId(order) ? '▼ Ocultar' : '▶ Detalhes' }}
               </button>
 
               <button
                 v-if="order.status !== 'cancelado' && order.status !== 'entregue' && order.status !== 'cancelled' && order.status !== 'delivered'"
-                @click="cancelOrder(order.id || order.idPedido)"
+                @click="cancelOrder(resolveOrderId(order))"
                 class="flex-1 px-4 py-2 bg-red-100 text-red-600 font-semibold rounded-lg hover:bg-red-200 transition-colors duration-200"
               >
                 ✕ Cancelar
               </button>
             </div>
 
-            <!-- Detalhes Expandidos -->
-<<<<<<< HEAD
-            <div 
-              v-if="expandedOrderId === (order.id || order.idPedido)"
-=======
             <div
               v-if="expandedOrderId === resolveOrderId(order)"
->>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
               class="mt-4 pt-4 border-t border-gray-200"
             >
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -222,10 +187,10 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-import AuthService from '@/services/authService'; // ✅ NOVO IMPORT DE SEGURANÇA
+import AuthService from '@/services/authService';
 import { isAxiosError } from 'axios';
 
-// --- Interfaces (Mantenha as interfaces no seu arquivo Vue) ---
+// --- Interfaces ---
 interface ItemPedido {
   id?: number; nome?: string; name?: string;
   quantidade?: number; quantity?: number;
@@ -237,7 +202,6 @@ interface Pedido {
   customerName?: string; idUsuario?: number; idRestaurante?: number;
   items?: ItemPedido[]; itens?: ItemPedido[];
 }
-// --- Fim Interfaces ---
 
 const router = useRouter();
 const API_BASE_URL = 'http://localhost:8080';
@@ -252,7 +216,6 @@ if (!token || currentUser?.tipo !== 'RESTAURANTE') {
   AuthService.logout();
   if (!token) router.push('/login');
 }
-// -----------------------
 
 const orders = ref<Pedido[]>([]);
 const loading = ref(false);
@@ -266,6 +229,10 @@ const goBack = () => {
   router.push('/restaurante/dashboard');
 };
 
+const resolveOrderId = (order: Pedido): string | number => {
+  return order.id ?? order.idPedido ?? '';
+};
+
 const fetchOrders = async () => {
   loading.value = true;
   if (!token) {
@@ -274,11 +241,8 @@ const fetchOrders = async () => {
   }
 
   try {
-    // ✅ ROTA SEGURA: /painel-restaurante/historico
-    // O backend usa o token para saber o ID do restaurante
     const response = await axios.get(`${API_BASE_URL}/painel-restaurante/historico`, { headers });
 
-    // Mapeamento dos dados
     orders.value = response.data.map((pedido: any) => ({
       id: pedido.idPedido?.toString() || pedido.id?.toString(),
       idPedido: pedido.idPedido || pedido.id,
@@ -296,7 +260,7 @@ const fetchOrders = async () => {
   } catch (error) {
     console.error('Erro ao buscar pedidos:', error);
     if (axios.isAxiosError(error) && error.response?.status === 401) {
-      AuthService.logout(); // Redireciona em caso de token inválido
+      AuthService.logout();
     }
     orders.value = [];
   } finally {
@@ -304,30 +268,14 @@ const fetchOrders = async () => {
   }
 };
 
-<<<<<<< HEAD
-=======
-const resolveOrderId = (order: Pedido): string | number => {
-  return order.id ?? order.idPedido ?? '';
-};
-
-// --- Funções Computadas e Lógica de Status (Mantidas) ---
-// (filteredOrders, statusText, getStatusBadgeClass, formatPrice, formatDateTime, etc.)
-
-
->>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
 const filteredOrders = computed(() => {
   let result = [...orders.value];
 
   // Filtrar por busca
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase().replace('#', '');
-<<<<<<< HEAD
-    result = result.filter(order => 
-      (order.id || order.idPedido)?.toString().includes(query)
-=======
     result = result.filter(order =>
-      (((order.id ?? order.idPedido) ?? '') as string).toString().toLowerCase().includes(query)
->>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
+      resolveOrderId(order).toString().toLowerCase().includes(query)
     );
   }
 
@@ -440,24 +388,20 @@ const getNextStatusText = (status: string): string => {
 };
 
 const updateOrderStatus = async (orderId: string | number, newStatus: string) => {
-<<<<<<< HEAD
-=======
   if (!orderId || !token) {
     alert('ID do pedido ou token inválido.');
     return;
   }
->>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
+
   updatingOrderId.value = orderId;
   try {
-    // ✅ ROTA SEGURA
     await axios.put(
       `${API_BASE_URL}/painel-restaurante/pedidos/${orderId}/status`,
       { novoStatus: newStatus },
-      { headers } // Adiciona o token de autorização
+      { headers }
     );
 
-    // Atualizar o status localmente
-    const order = orders.value.find(o => (o.id || o.idPedido) === orderId);
+    const order = orders.value.find(o => resolveOrderId(o) === orderId);
     if (order) {
       order.status = newStatus;
     }
@@ -466,34 +410,29 @@ const updateOrderStatus = async (orderId: string | number, newStatus: string) =>
     alert('Erro ao atualizar o status do pedido.');
   } finally {
     updatingOrderId.value = null;
-    fetchOrders(); // Recarrega a lista
+    fetchOrders();
   }
 };
 
 const cancelOrder = async (orderId: string | number) => {
-<<<<<<< HEAD
-=======
   if (!orderId || !token) {
     alert('ID do pedido ou token inválido.');
     return;
   }
 
->>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
   if (!confirm('Tem certeza que deseja cancelar este pedido?')) {
     return;
   }
 
   updatingOrderId.value = orderId;
   try {
-    // ✅ ROTA SEGURA
     await axios.put(
       `${API_BASE_URL}/painel-restaurante/pedidos/${orderId}/status`,
       { novoStatus: 'cancelado' },
-      { headers } // Adiciona o token de autorização
+      { headers }
     );
 
-    // Atualizar o status localmente
-    const order = orders.value.find(o => (o.id || o.idPedido) === orderId);
+    const order = orders.value.find(o => resolveOrderId(o) === orderId);
     if (order) {
       order.status = 'cancelado';
     }
@@ -502,19 +441,16 @@ const cancelOrder = async (orderId: string | number) => {
     alert('Erro ao cancelar o pedido.');
   } finally {
     updatingOrderId.value = null;
-    fetchOrders(); // Recarrega
+    fetchOrders();
   }
 };
 
 onMounted(() => {
-  // Chamada inicial de pedidos se houver token
   if (token) {
     fetchOrders();
     const interval = setInterval(fetchOrders, 30000);
-    // Limpar intervalo ao desmontar o componente
     return () => clearInterval(interval);
   } else {
-    // Redireciona se não houver token
     router.push('/login');
   }
 });

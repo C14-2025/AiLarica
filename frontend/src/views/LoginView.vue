@@ -35,7 +35,6 @@
         </button>
       </div>
 
-      <!-- Mensagem de Erro -->
       <div v-if="errorMessage" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
         <p class="text-sm text-red-700">{{ errorMessage }}</p>
       </div>
@@ -52,12 +51,9 @@
               type="email"
               autocomplete="email"
               required
-<<<<<<< HEAD
+              v-model="email"
               :disabled="loading"
               class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-=======
-              v-model="email" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
->>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
             />
           </div>
         </div>
@@ -73,12 +69,9 @@
               type="password"
               autocomplete="current-password"
               required
-<<<<<<< HEAD
+              v-model="senha"
               :disabled="loading"
               class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-=======
-              v-model="senha" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
->>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
             />
           </div>
         </div>
@@ -127,96 +120,57 @@
 </template>
 
 <script setup lang="ts">
-<<<<<<< HEAD
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import axios from 'axios'
-
-const userType = ref<'user' | 'restaurant'>('user')
-const router = useRouter()
-const loading = ref(false)
-const errorMessage = ref('')
-
-const API_BASE_URL = 'http://localhost:8080'
-
-const handleLogin = async () => {
-  const emailInput = (document.getElementById('email') as HTMLInputElement)?.value
-  const passwordInput = (document.getElementById('password') as HTMLInputElement)?.value
-
-  if (!emailInput || !passwordInput) {
-    errorMessage.value = 'Por favor, preencha todos os campos'
-    return
-  }
-
-  loading.value = true
-  errorMessage.value = ''
-
-  try {
-    const response = await axios.post(`${API_BASE_URL}/auth/login`, {
-      email: emailInput,
-      senha: passwordInput,
-      tipo: userType.value === 'user' ? 'USUARIO' : 'RESTAURANTE',
-      endereco: userType.value === 'user' ? 'Endereço Padrão' : undefined
-    })
-
-    const { token, id, tipo } = response.data
-
-    // Armazenar token e dados do usuário no localStorage
-    localStorage.setItem('authToken', token)
-    localStorage.setItem('userId', id)
-    localStorage.setItem('userType', tipo)
-    localStorage.setItem('userEmail', emailInput)
-
-    // Redirecionar para o dashboard apropriado
-    if (tipo === 'RESTAURANTE') {
-      router.push('/restaurante/dashboard')
-    } else {
-      router.push('/usuario/dashboard')
-    }
-  } catch (error: any) {
-    errorMessage.value = error.response?.data?.mensagem || 'Erro ao fazer login. Verifique suas credenciais.'
-    console.error('Erro ao fazer login:', error)
-  } finally {
-    loading.value = false
-=======
 import { ref } from 'vue';
-import AuthService from '@/services/authService';
 import { useRouter } from 'vue-router';
+import AuthService from '@/services/authService';
 
 const router = useRouter();
 
+// Estados do formulário
 const userType = ref<'user' | 'restaurant'>('user');
-const email = ref("");
-const senha = ref("");
+const email = ref('');
+const senha = ref('');
+
+// Estados de UI
+const loading = ref(false);
+const errorMessage = ref('');
 
 const handleLogin = async () => {
+  // Limpar erro anterior
+  errorMessage.value = '';
+
+  if (!email.value || !senha.value) {
+    errorMessage.value = 'Por favor, preencha todos os campos';
+    return;
+  }
+
+  loading.value = true;
+
   try {
     const body = {
       email: email.value,
       senha: senha.value,
       tipo: userType.value === 'user' ? 'USUARIO' : 'RESTAURANTE',
+      // Mantive a lógica do "Bottom" que é mais robusta
       endereco: userType.value === 'user' ? 'Endereço Não Requerido no Login' : 'N/A'
     };
 
     const response = await AuthService.login(body);
 
     console.log("Login bem-sucedido!", response);
-    console.log("Usuário logado:", response.nome, " | Tipo:", response.tipo);
 
-    if (userType.value === 'restaurant') {
+    if (response.tipo === 'RESTAURANTE') {
       router.push('/restaurante/dashboard');
     } else {
       router.push('/usuario/dashboard');
     }
 
-  } catch (error) {
-    // ✅ CORREÇÃO AQUI: Não precisamos mais do alerta genérico
+  } catch (error: any) {
     console.error("Erro no login:", error);
-
-    // ⚠️ Esta linha é crítica: Se houve um erro (catch), retornamos imediatamente
-    // para garantir que o manipulador de evento termine sem acionar o F5.
-    return;
->>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
+    // Recupera mensagem de erro do backend se existir, senão usa uma genérica
+    errorMessage.value = error.response?.data?.mensagem || 'Erro ao fazer login. Verifique suas credenciais.';
+  } finally {
+    loading.value = false;
   }
 };
 </script>
