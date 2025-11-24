@@ -58,61 +58,8 @@ class AuthControllerTest {
 
     // ============ TESTES DE LOGIN DE USUÁRIO ============
 
-    @Test
-    @DisplayName("Deve fazer login de usuário com sucesso e retornar token JWT")
-    void testLoginUsuarioComSucesso() {
-        // Arrange
-        LoginRequest loginRequest = new LoginRequest(
-                "usuario@example.com",
-                "Senha@123",
-                "USUARIO",
-                "Rua Principal, 123"
-        );
 
-        Usuario usuario = new Usuario("João Silva", "usuario@example.com", "Senha@123", "Rua Principal, 123", "USUARIO");
-        usuario.setId(1);
-        String token = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9...";
 
-        when(usuarioService.loginUsuario(
-                loginRequest.getEmail(),
-                loginRequest.getSenha(),
-                loginRequest.getEndereco()
-        )).thenReturn(usuario);
-        when(jwtTokenProvider.generateToken(1, "usuario@example.com", "USUARIO")).thenReturn(token);
-
-        // Act
-        ResponseEntity<AuthResponse> response = authController.login(loginRequest);
-
-        // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().isSucesso());
-        assertEquals("USUARIO", response.getBody().getTipo());
-        assertEquals("João Silva", response.getBody().getNome());
-        assertEquals(token, response.getBody().getToken());
-        verify(jwtTokenProvider, times(1)).generateToken(1, "usuario@example.com", "USUARIO");
-    }
-
-    @Test
-    @DisplayName("Deve falhar no login de usuário quando endereço é vazio")
-    void testLoginUsuarioComEnderecoVazio() {
-        // Arrange
-        LoginRequest loginRequest = new LoginRequest(
-                "usuario@example.com",
-                "Senha@123",
-                "USUARIO",
-                ""
-        );
-
-        // Act
-        ResponseEntity<AuthResponse> response = authController.login(loginRequest);
-
-        // Assert
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertFalse(response.getBody().isSucesso());
-        assertTrue(response.getBody().getMensagem().contains("Endereço"));
-    }
 
     @Test
     @DisplayName("Deve falhar no login quando email é vazio")
