@@ -72,7 +72,7 @@ class PratoServiceTest {
 
         // Execução
         // Passando o novo ID do Restaurante, conforme a nova assinatura do Service
-        Optional<Prato> resultado = pratoService.atualizarPrato(idRestauranteDono, idPrato, pratoAtualizado);
+        Optional<Prato> resultado = pratoService.atualizarPrato(idPrato, idRestauranteDono, pratoAtualizado);
 
         // Verificação
         assertTrue(resultado.isEmpty());

@@ -20,6 +20,12 @@ class RestauranteServiceTest {
     @Mock
     private RestauranteDAO restauranteDAO;
 
+    @Mock
+    private br.inatel.ailarica.security.PasswordEncoder passwordEncoder;
+
+    @Mock
+    private br.inatel.ailarica.Pedidos.PedidoDAO pedidoDAO;
+
     @InjectMocks
     private RestauranteService restauranteService;
 

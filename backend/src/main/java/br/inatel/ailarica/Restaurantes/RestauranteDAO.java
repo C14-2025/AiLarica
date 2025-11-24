@@ -138,6 +138,10 @@ public class RestauranteDAO {
         }
     }
 
+    public java.util.Optional<Restaurante> buscarPorIdOptional(int id) {
+        return java.util.Optional.ofNullable(buscarPorId(id));
+    }
+
     public void deletar(int id) {
         jdbcTemplate.update("DELETE FROM restaurante WHERE idRestaurante = ?", id);
     }

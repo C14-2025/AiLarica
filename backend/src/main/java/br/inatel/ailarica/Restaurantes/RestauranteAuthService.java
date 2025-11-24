@@ -43,13 +43,9 @@ public class RestauranteAuthService {
 
             // 1. Verifica a senha
             if (restaurante.getSenha() != null && passwordEncoder.matches(senha, restaurante.getSenha())) {
-
-                // --- MUDANÇA AQUI ---
-                // Removemos o 'if (restaurante.isAtivo())'.
-                // O login é permitido sempre que a senha estiver correta.
-                // O 'ativo' agora serve apenas para dizer se a loja está aberta para clientes.
-
-                return restaurante;
+                // Restaurando a verificação de 'ativo': o teste espera que restaurantes inativos
+                // não consigam fazer login. Se estiver ativo, retorna o restaurante; caso contrário, null.
+                return restaurante.isAtivo() ? restaurante : null;
             }
         }
         return null;
@@ -73,5 +69,9 @@ public class RestauranteAuthService {
 
     public Optional<Restaurante> buscarPorEmail(String email) {
         return restauranteDAO.buscarPorEmail(email);
+    }
+
+    public Optional<Restaurante> buscarPorId(int id) {
+        return restauranteDAO.buscarPorIdOptional(id);
     }
 }
