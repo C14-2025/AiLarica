@@ -227,6 +227,7 @@ const isLoading = ref(true); // ✅ NOVO: Estado de Carregamento
 
 const restaurantData = ref({
   name: currentUser?.nome || 'Carregando...',
+  email: currentUser?.email || '',
   isOpen: false
 });
 
@@ -277,6 +278,7 @@ const fetchMetricsAndData = async () => {
     // O nome e status ativo vêm de outra rota (mais pública, mas necessária)
     const restResponse = await axios.get(`${API_BASE_URL}/restaurantes/${RESTAURANT_ID_FROM_TOKEN}`);
     restaurantData.value.name = restResponse.data.nome;
+    restaurantData.value.email = restResponse.data.email || currentUser?.email || '';
     restaurantData.value.isOpen = restResponse.data.ativo;
 
   } catch (error) {
