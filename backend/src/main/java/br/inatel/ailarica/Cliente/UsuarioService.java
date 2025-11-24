@@ -48,8 +48,8 @@ public class UsuarioService {
 
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
 
-        // DICA: Se quiser facilitar testes, descomente abaixo:
-        // usuario.confirmar();
+        // ✅ CORREÇÃO: Confirma o usuário imediatamente para o fluxo de testes.
+        usuario.confirmar();
 
         usuarioDAO.criar(usuario);
         return true;

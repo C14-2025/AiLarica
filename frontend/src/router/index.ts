@@ -37,6 +37,12 @@ const router = createRouter({
       name: 'restaurante-cardapio',
       component: () => import('../views/CardapioView.vue'),
       meta: { requiresAuth: true, role: 'restaurant' }
+    },
+    {
+      path: '/restaurante/settings',
+      name: 'restaurante-settings',
+      component: () => import('../views/SettingsView.vue'),
+      meta: { requiresAuth: true, role: 'restaurant' }
     }
   ]
 })

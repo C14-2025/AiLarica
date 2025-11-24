@@ -32,22 +32,30 @@ public class RestauranteAuthService {
     public Restaurante loginRestaurante(String email, String senha) {
         // Validar email
         if (!isEmailValid(email)) {
+            System.out.println("Email inválido!");
             return null;
         }
 
-        // Buscar restaurante
+        // Buscar restaurante por email
         Optional<Restaurante> restauranteOpt = restauranteDAO.buscarPorEmail(email);
 
         if (restauranteOpt.isPresent()) {
             Restaurante restaurante = restauranteOpt.get();
 
-            // 1. Verifica a senha
+            // Validar senha (comparar com hash)
             if (restaurante.getSenha() != null && passwordEncoder.matches(senha, restaurante.getSenha())) {
-                // Restaurando a verificação de 'ativo': o teste espera que restaurantes inativos
-                // não consigam fazer login. Se estiver ativo, retorna o restaurante; caso contrário, null.
-                return restaurante.isAtivo() ? restaurante : null;
+
+                // ✅ CORREÇÃO FINAL: REMOVEMOS A CHECAGEM ATIVO/INATIVO PARA O LOGIN.
+                // O dono pode logar mesmo se a loja estiver fechada.
+                return restaurante;
+
+            } else {
+                System.out.println("Senha incorreta!");
+                return null;
             }
         }
+
+        System.out.println("Restaurante não encontrado!");
         return null;
     }
 

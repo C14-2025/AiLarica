@@ -64,13 +64,18 @@ public class PratoDAO {
     // ✅ UPDATE (Atualizar prato)
     public void atualizar(Prato prato) {
         String sql = "UPDATE prato SET nome=?, descricao=?, preco=?, disponivel=?, foto=? WHERE idPrato=?";
+
         jdbcTemplate.update(sql,
-                prato.getNome(),
-                prato.getDescricao(),
-                prato.getPreco(),
-                prato.isDisponivel(),
-                prato.getFoto(),
-                prato.getIdPrato());
+                prato.getNome(),         // 1
+                prato.getDescricao(),    // 2
+                prato.getPreco(),        // 3
+
+                // 🛑 FIX: Converte o boolean em 1 ou 0 para o SQLite.
+                prato.isDisponivel() ? 1 : 0,
+                // 4
+
+                prato.getFoto(),         // 5
+                prato.getIdPrato());     // 6 (Cláusula WHERE)
     }
 
     // --- MÉTODOS QUE VOCÊ JÁ TINHA ---

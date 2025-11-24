@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-200 dark:bg-gray-200 custom-dashboard-bg">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 custom-dashboard-bg">
     
     <header class="bg-red-600 shadow-xl shadow-red-600/30 sticky top-0 z-50 custom-slide-down">
       
@@ -15,23 +15,18 @@
           <h1 class="text-2xl sm:text-3xl font-bold text-white drop-shadow-md">Painel de Parceiros</h1>
         </div>
 
-        <div class="flex items-center space-x-4 sm:space-x-6">
-          
-          <div class="relative text-3xl text-white cursor-pointer transition-transform duration-200 hover:scale-110 custom-shake">
-            <span class="drop-shadow-md">🔔</span>
-            <span class="absolute -top-1 -right-1 bg-yellow-400 text-red-700 text-xs font-extrabold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white custom-bounce">3</span>
-          </div>
-          
-          <div class="flex items-center space-x-3 bg-white/15 p-2 sm:px-4 sm:py-2 rounded-full backdrop-blur-sm cursor-pointer transition-all duration-300 hover:bg-white/25 hover:-translate-y-0.5">
-            <div class="w-11 h-11 bg-linear-to-br from-yellow-300 to-yellow-500 rounded-full flex items-center justify-center font-extrabold text-red-600 text-base border-2 border-white shadow-lg">
-              <span>{{ restaurantData.name.substring(0, 2).toUpperCase() }}</span>
+          <div class="flex items-center space-x-4 sm:space-x-6">
+            
+            <div class="relative text-3xl text-white cursor-pointer transition-transform duration-200 hover:scale-110 custom-shake">
+              <span class="drop-shadow-md">🔔</span>
+              <span class="absolute -top-1 -right-1 bg-yellow-400 text-red-700 text-xs font-extrabold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white custom-bounce">3</span>
             </div>
-            <div class="hidden sm:flex flex-col text-sm">
-              <span class="text-white font-bold">{{ restaurantData.name }}</span>
-              <span class="text-white/90 text-xs font-medium">● Online</span>
-            </div>
+            
+            <UserMenu
+              :restaurantName="restaurantData.name"
+              :restaurantEmail="restaurantData.email"
+            />
           </div>
-        </div>
       </div>
     </header>
 
@@ -190,6 +185,7 @@ import RestaurantStatus from '@/views/RestaurantStatus.vue';
 import SalesChart from '@/views/SalesChart.vue';
 import MenuOverview from '@/views/MenuOverview.vue';
 import RecentOrders from '@/views/RecentOrders.vue';
+import UserMenu from '@/views/UserMenu.vue';
 
 const router = useRouter();
 
@@ -198,6 +194,7 @@ const API_BASE_URL = 'http://localhost:8080'; // URL base do backend (ajustar co
 
 const restaurantData = ref({
   name: 'Carregando...',
+  email: 'email@example.com',
   isOpen: false
 });
 
@@ -247,7 +244,9 @@ const fetchRestaurantData = async () => {
     const response = await axios.get(`${API_BASE_URL}/restaurantes/${RESTAURANT_ID}`);
     const data = response.data;
     restaurantData.value.name = data.nome;
+    restaurantData.value.email = data.email || 'email@example.com';
     restaurantData.value.isOpen = data.ativo;
+    localStorage.setItem('restaurantId', data.idRestaurante?.toString() || RESTAURANT_ID.toString());
     // Adicionar lógica para carregar estatísticas reais se houver endpoint
     // Por enquanto, mantemos as estatísticas mockadas ou ajustamos para 0
   } catch (error) {

@@ -4,7 +4,7 @@ import br.inatel.ailarica.Cliente.Usuario;
 import br.inatel.ailarica.Cliente.UsuarioService;
 import br.inatel.ailarica.Restaurantes.Restaurante;
 import br.inatel.ailarica.Restaurantes.RestauranteAuthService;
-import br.inatel.ailarica.Restaurantes.RestauranteService; // <--- IMPORT NOVO E NECESSÁRIO
+import br.inatel.ailarica.Restaurantes.RestauranteService; // Import necessário
 import br.inatel.ailarica.security.JwtTokenProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,13 +22,12 @@ public class AuthController {
 
     private final UsuarioService usuarioService;
     private final RestauranteAuthService restauranteAuthService;
-    private final RestauranteService restauranteService; // <--- NOVA DEPENDÊNCIA
+    private final RestauranteService restauranteService;
     private final JwtTokenProvider jwtTokenProvider;
 
-    // Construtor atualizado recebendo o RestauranteService
     public AuthController(UsuarioService usuarioService,
                           RestauranteAuthService restauranteAuthService,
-                          RestauranteService restauranteService, // <--- INJEÇÃO AQUI
+                          RestauranteService restauranteService, // Injeção
                           JwtTokenProvider jwtTokenProvider) {
         this.usuarioService = usuarioService;
         this.restauranteAuthService = restauranteAuthService;
@@ -38,6 +37,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) {
+
         // Validações básicas
         if (loginRequest.getEmail() == null || loginRequest.getEmail().isEmpty()) {
             return ResponseEntity.badRequest().body(new AuthResponse("Email é obrigatório!"));
@@ -49,48 +49,73 @@ public class AuthController {
             return ResponseEntity.badRequest().body(new AuthResponse("Tipo de usuário é obrigatório! (USUARIO ou RESTAURANTE)"));
         }
 
-        // Login de Usuário (Cliente)
+        // ---------------------------------------------
+        // LOGIN USUÁRIO — CORREÇÃO: Usa o método login de 2 parâmetros
+        // ---------------------------------------------
         if ("USUARIO".equalsIgnoreCase(loginRequest.getTipo())) {
-            if (loginRequest.getEndereco() == null || loginRequest.getEndereco().isEmpty()) {
-                return ResponseEntity.badRequest().body(new AuthResponse("Endereço é obrigatório para login de usuário!"));
-            }
 
-            Usuario usuario = usuarioService.loginUsuario(
+            Usuario usuario = usuarioService.login( // <-- AGORA ESTÁ CORRETO!
                     loginRequest.getEmail(),
-                    loginRequest.getSenha(),
-                    loginRequest.getEndereco()
+                    loginRequest.getSenha()
             );
 
             if (usuario != null) {
-                String token = jwtTokenProvider.generateToken(usuario.getId(), usuario.getEmail(), "USUARIO");
+                String token = jwtTokenProvider.generateToken(
+                        usuario.getId(),
+                        usuario.getEmail(),
+                        "USUARIO"
+                );
+
                 return ResponseEntity.ok(new AuthResponse(
-                        usuario.getId(), usuario.getNome(), usuario.getEmail(),
-                        "USUARIO", usuario.getEndereco(), token, "Login de usuário bem-sucedido!"
+                        usuario.getId(),
+                        usuario.getNome(),
+                        usuario.getEmail(),
+                        "USUARIO",
+                        usuario.getEndereco(),
+                        token,
+                        "Login de usuário bem-sucedido!"
                 ));
             } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AuthResponse("Email, senha incorretos ou conta não confirmada!"));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new AuthResponse("Email ou senha incorretos ou conta não confirmada!"));
             }
         }
 
-        // Login de Restaurante
+        // ---------------------------------------------
+        // LOGIN RESTAURANTE
+        // ---------------------------------------------
         else if ("RESTAURANTE".equalsIgnoreCase(loginRequest.getTipo())) {
+
             Restaurante restaurante = restauranteAuthService.loginRestaurante(
                     loginRequest.getEmail(),
                     loginRequest.getSenha()
             );
 
             if (restaurante != null) {
-                String token = jwtTokenProvider.generateToken(restaurante.getIdRestaurante(), restaurante.getEmail(), "RESTAURANTE");
+                String token = jwtTokenProvider.generateToken(
+                        restaurante.getIdRestaurante(),
+                        restaurante.getEmail(),
+                        "RESTAURANTE"
+                );
+
                 return ResponseEntity.ok(new AuthResponse(
-                        restaurante.getIdRestaurante(), restaurante.getNome(), restaurante.getEmail(),
-                        "RESTAURANTE", restaurante.getEndereco(), token, "Login de restaurante bem-sucedido!"
+                        restaurante.getIdRestaurante(),
+                        restaurante.getNome(),
+                        restaurante.getEmail(),
+                        "RESTAURANTE",
+                        restaurante.getEndereco(),
+                        token,
+                        "Login de restaurante bem-sucedido!"
                 ));
             } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AuthResponse("Email, senha incorretos ou restaurante inativo!"));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new AuthResponse("Email, senha incorretos ou restaurante inativo!"));
             }
         }
 
-        return ResponseEntity.badRequest().body(new AuthResponse("Tipo de usuário inválido! Use USUARIO ou RESTAURANTE"));
+        return ResponseEntity.badRequest().body(
+                new AuthResponse("Tipo de usuário inválido! Use USUARIO ou RESTAURANTE")
+        );
     }
 
     @PostMapping("/cadastro/usuario")
@@ -130,9 +155,7 @@ public class AuthController {
         try {
             restaurante.setAtivo(true);
 
-            // --- AQUI ESTÁ A CORREÇÃO: SALVAR NO BANCO ---
-            restauranteService.criar(restaurante);
-            // ---------------------------------------------
+            restauranteService.criar(restaurante); // SALVAMENTO REAL (Correção de Bug)
 
             return ResponseEntity.status(HttpStatus.CREATED).body("Restaurante cadastrado com sucesso!");
         } catch (Exception e) {
