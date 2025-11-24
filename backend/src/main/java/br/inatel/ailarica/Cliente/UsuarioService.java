@@ -2,7 +2,6 @@ package br.inatel.ailarica.Cliente;
 
 import br.inatel.ailarica.security.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,142 +16,77 @@ public class UsuarioService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // Validações de email e senha
+    // --- VALIDAÇÕES ---
+
     private boolean isEmailValid(String email) {
         if (email == null) return false;
         return email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
     }
 
     private boolean isSenhaValida(String senha) {
-        if (senha == null) {
-            System.out.println("A senha não pode ser nula.");
-            return false;
-        }
-        boolean valido = true;
-
-        if (senha.length() < 8) {
-            System.out.println("A senha deve ter pelo menos 8 caracteres.");
-            valido = false;
-        }
-
-        if (!senha.matches(".*\\d.*")) {
-            System.out.println("A senha deve conter pelo menos um número.");
-            valido = false;
-        }
-
-        if (!senha.matches(".*[!@#$%^&*(),.?\":{}|<>].*")) {
-            System.out.println("A senha deve conter pelo menos um caractere especial.");
-            valido = false;
-        }
-
-        return valido;
+        if (senha == null) return false;
+        // Mínimo 8 chars, 1 número, 1 especial
+        return senha.length() >= 8 &&
+                senha.matches(".*\\d.*") &&
+                senha.matches(".*[!@#$%^&*(),.?\":{}|<>].*");
     }
 
-    // Validação de endereço
     private boolean isEnderecoValido(String endereco) {
-        if (endereco == null || endereco.trim().isEmpty()) {
-            System.out.println("O endereço não pode ser vazio.");
-            return false;
-        }
-        return endereco.trim().length() >= 5;
+        return endereco != null && endereco.trim().length() >= 5;
     }
 
-    // Cadastro por campos (compatível com versões antigas)
-    public boolean cadastrar(String nome, String email, String senha) {
-        if (!isEmailValid(email)) {
-            System.out.println("Email inválido!");
-            return false;
-        }
+    // --- AÇÕES PRINCIPAIS ---
 
-        if (!isSenhaValida(senha)) {
-            System.out.println("A senha deve ter pelo menos 6 caracteres!");
-            return false;
-        }
-
-        if (usuarioDAO.buscarPorEmail(email).isPresent()) {
-            return false; // já existe
-        }
-
-        // Criptografar senha antes de salvar
-        String senhaHash = passwordEncoder.encode(senha);
-        usuarioDAO.criar(new Usuario(nome, email, senhaHash, null, "USUARIO"));
-        return true;
-    }
-
-    // Cadastro por objeto Usuario
     public boolean cadastrar(Usuario usuario) {
-        if (!isEmailValid(usuario.getEmail())) {
-            System.out.println("Email inválido!");
-            return false;
-        }
+        if (!isEmailValid(usuario.getEmail())) return false;
+        if (!isSenhaValida(usuario.getSenha())) return false;
+        if (usuarioDAO.buscarPorEmail(usuario.getEmail()).isPresent()) return false;
 
-        if (!isSenhaValida(usuario.getSenha())) {
-            System.out.println("A senha deve ter pelo menos 6 caracteres!");
-            return false;
-        }
-
-        if (usuarioDAO.buscarPorEmail(usuario.getEmail()).isPresent()) {
-            return false; // já existe
-        }
-
-        // Definir tipo padrão se não estiver definido
         if (usuario.getTipo() == null || usuario.getTipo().isEmpty()) {
             usuario.setTipo("USUARIO");
         }
 
-        // Criptografar senha antes de salvar
-        String senhaHash = passwordEncoder.encode(usuario.getSenha());
-        usuario.setSenha(senhaHash);
+        usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
+
+        // DICA: Se quiser facilitar testes, descomente abaixo:
+        // usuario.confirmar();
 
         usuarioDAO.criar(usuario);
         return true;
     }
 
-    // Atualizar senha
     public boolean atualizarSenha(String email, String senhaAntiga, String novaSenha) {
-        if (!isSenhaValida(novaSenha)) {
-            return false; // bloqueia atualização se não cumprir regras
-        }
+        if (!isSenhaValida(novaSenha)) return false;
 
         return usuarioDAO.buscarPorEmail(email)
-                .filter(u -> passwordEncoder.matches(senhaAntiga, u.getSenha()))
+                .filter(u -> passwordEncoder.matches(senhaAntiga, u.getSenha())) // Verifica senha antiga hash
                 .map(u -> {
-                    // Criptografar nova senha
-                    String novaSenhaHash = passwordEncoder.encode(novaSenha);
-                    u.setSenha(novaSenhaHash);
+                    u.setSenha(passwordEncoder.encode(novaSenha)); // Salva nova hash
                     usuarioDAO.atualizar(u);
                     return true;
                 })
                 .orElse(false);
     }
 
-    // Login (só permite se confirmado)
+    // Login Genérico (Usado pelo AuthController)
     public Usuario login(String email, String senha) {
         return usuarioDAO.buscarPorEmail(email)
                 .filter(u -> passwordEncoder.matches(senha, u.getSenha()) && u.isConfirmado())
                 .orElse(null);
     }
 
-    // Login para usuário com validação de endereço
+    // Login Específico de Usuário (Com validação de Endereço)
     public Usuario loginUsuario(String email, String senha, String endereco) {
-        // Validar endereço
-        if (!isEnderecoValido(endereco)) {
-            System.out.println("Endereço inválido ou vazio!");
-            return null;
-        }
+        if (!isEnderecoValido(endereco)) return null;
 
-        // Buscar usuário
         Optional<Usuario> usuarioOpt = usuarioDAO.buscarPorEmail(email);
-        
+
         if (usuarioOpt.isPresent()) {
             Usuario usuario = usuarioOpt.get();
-            
-            // Validar senha (comparar com hash) e confirmação
             if (passwordEncoder.matches(senha, usuario.getSenha()) && usuario.isConfirmado()) {
-                // Validar que é do tipo USUARIO
                 if ("USUARIO".equals(usuario.getTipo())) {
-                    // Validar que o endereço corresponde (ou atualizar se necessário)
-                    if (usuario.getEndereco() == null || usuario.getEndereco().isEmpty()) {
+                    // Atualiza endereço se necessário
+                    if (usuario.getEndereco() == null || usuario.getEndereco().isEmpty() || !usuario.getEndereco().equals(endereco)) {
                         usuario.setEndereco(endereco);
                         usuarioDAO.atualizar(usuario);
                     }
@@ -160,11 +94,9 @@ public class UsuarioService {
                 }
             }
         }
-        
         return null;
     }
 
-    // Método auxiliar para confirmar email (necessário para o fluxo de cadastro)
     public boolean confirmarEmail(String email) {
         return usuarioDAO.buscarPorEmail(email)
                 .map(u -> {
@@ -175,17 +107,16 @@ public class UsuarioService {
                 .orElse(false);
     }
 
-    // Listar todos os usuários
+    // --- CONSULTAS ---
+
     public List<Usuario> listarTodos() {
         return usuarioDAO.listarTodos();
     }
 
-    // Deletar usuário
     public boolean deletar(int id) {
         return usuarioDAO.deletar(id);
     }
 
-    // Buscar por ID
     public Optional<Usuario> buscarPorId(int id) {
         return usuarioDAO.buscarPorId(id);
     }

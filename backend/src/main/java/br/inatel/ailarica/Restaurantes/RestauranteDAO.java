@@ -13,24 +13,22 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Repository
 public class RestauranteDAO {
 
     private final JdbcTemplate jdbcTemplate;
-
-    private final PratoDAO pratoDAO; // Injeta o PratoDAO
-    private final ObjectMapper objectMapper; // Para serializar/desserializar horários
-    private final RowMapper<Restaurante> restauranteRowMapper; // RowMapper completo para Restaurante
+    private final PratoDAO pratoDAO;
+    private final ObjectMapper objectMapper;
+    private final RowMapper<Restaurante> restauranteRowMapper;
 
     @Autowired
     public RestauranteDAO(JdbcTemplate jdbcTemplate, PratoDAO pratoDAO) {
         this.jdbcTemplate = jdbcTemplate;
         this.pratoDAO = pratoDAO;
-        this.objectMapper = new ObjectMapper(); // Instancia o conversor JSON
+        this.objectMapper = new ObjectMapper();
 
-        // Inicializa o RowMapper aqui, onde objectMapper e pratoDAO já estão inicializados
+        // Mapeamento do Banco para o Objeto
         this.restauranteRowMapper = (rs, rowNum) -> {
             Restaurante r = new Restaurante();
             r.setIdRestaurante(rs.getInt("idRestaurante"));
@@ -44,7 +42,9 @@ public class RestauranteDAO {
             r.setEmail(rs.getString("email"));
             r.setSenha(rs.getString("senha"));
 
-            // 1. Desserializa os horários a partir da coluna JSON
+            // ✅ LENDO A COLUNA NOVA
+            r.setTempoMedioEntrega(rs.getString("tempoMedioEntrega"));
+
             try {
                 String horariosJson = rs.getString("horarios_json");
                 if (horariosJson != null && !horariosJson.isEmpty()) {
@@ -52,23 +52,20 @@ public class RestauranteDAO {
                     r.setHorarios(horarios);
                 }
             } catch (JsonProcessingException e) {
-                e.printStackTrace(); // Tratar erro de desserialização
+                e.printStackTrace();
             }
 
-            // 2. Busca o cardápio usando o PratoDAO
             r.setCardapio(pratoDAO.listarPorRestaurante(r.getIdRestaurante()));
-
             return r;
         };
-    } // Fecha o construtor
+    }
 
-    // CREATE — cria restaurante e adiciona seus pratos
     public Restaurante criar(Restaurante restaurante) {
-        String sql = "INSERT INTO restaurante (nome, descricao, endereco, telefone, avaliacao, ativo, fotoPerfil, horarios_json, email, senha) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        KeyHolder keyHolder = new GeneratedKeyHolder(); // Para pegar o ID gerado
+        // ✅ SQL ATUALIZADO (Adicionado tempoMedioEntrega no final)
+        String sql = "INSERT INTO restaurante (nome, descricao, endereco, telefone, avaliacao, ativo, fotoPerfil, horarios_json, email, senha, tempoMedioEntrega) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
 
         try {
-            // Converte o objeto de horários para uma string JSON
             String horariosJson = objectMapper.writeValueAsString(restaurante.getHorarios());
 
             jdbcTemplate.update(connection -> {
@@ -83,54 +80,32 @@ public class RestauranteDAO {
                 ps.setString(8, horariosJson);
                 ps.setString(9, restaurante.getEmail());
                 ps.setString(10, restaurante.getSenha());
+                // ✅ SALVANDO A COLUNA NOVA
+                ps.setString(11, restaurante.getTempoMedioEntrega());
                 return ps;
             }, keyHolder);
 
-            // Pega o ID gerado e seta no objeto
             int idRestaurante = Objects.requireNonNull(keyHolder.getKey()).intValue();
             restaurante.setIdRestaurante(idRestaurante);
 
-            // Insere pratos (se houver) usando o PratoDAO
             if (restaurante.getCardapio() != null && !restaurante.getCardapio().isEmpty()) {
                 for (Prato prato : restaurante.getCardapio()) {
                     pratoDAO.criar(prato, idRestaurante);
                 }
             }
-            System.out.println("✅ Restaurante e cardápio inseridos com sucesso!");
-
-            // 2. Adicione o 'return' para enviar o objeto atualizado de volta
             return restaurante;
 
         } catch (Exception e) {
             e.printStackTrace();
-            return null; // Retorna null em caso de erro
-        }
-    }
-
-    // READ — lista todos os restaurantes com cardápio
-    public List<Restaurante> listarTodos() {
-        String sql = "SELECT * FROM restaurante";
-        return jdbcTemplate.query(sql, restauranteRowMapper);
-    }
-
-    // READ — busca restaurante por ID com cardápio
-    public Restaurante buscarPorId(int id) {
-        String sql = "SELECT * FROM restaurante WHERE idRestaurante = ?";
-        try {
-            return jdbcTemplate.queryForObject(sql, restauranteRowMapper, id);
-        } catch (Exception e) {
-            // Retorna null se não encontrar (EmptyResultDataAccessException)
             return null;
         }
     }
 
-    // UPDATE — atualiza dados do restaurante (não mexe nos pratos)
     public void atualizar(Restaurante restaurante) {
-        String sql = "UPDATE restaurante SET nome=?, descricao=?, endereco=?, telefone=?, avaliacao=?, ativo=?, fotoPerfil=?, horarios_json=?, email=?, senha=? WHERE idRestaurante=?";
+        // ✅ SQL ATUALIZADO
+        String sql = "UPDATE restaurante SET nome=?, descricao=?, endereco=?, telefone=?, avaliacao=?, ativo=?, fotoPerfil=?, horarios_json=?, email=?, senha=?, tempoMedioEntrega=? WHERE idRestaurante=?";
         try {
-            // Converte horários para JSON
             String horariosJson = objectMapper.writeValueAsString(restaurante.getHorarios());
-
             jdbcTemplate.update(sql,
                     restaurante.getNome(),
                     restaurante.getDescricao(),
@@ -142,50 +117,42 @@ public class RestauranteDAO {
                     horariosJson,
                     restaurante.getEmail(),
                     restaurante.getSenha(),
+                    // ✅ ATUALIZANDO A COLUNA NOVA
+                    restaurante.getTempoMedioEntrega(),
                     restaurante.getIdRestaurante());
-
-            System.out.println("✅ Restaurante atualizado com sucesso!");
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
     }
 
-    // DELETE — remove restaurante.
-    // (Seu Schema.sql deve ter "ON DELETE CASCADE" na tabela 'prato'
-    // para que isso funcione e delete os pratos juntos)
-    public void deletar(int id) {
-        String sqlRestaurante = "DELETE FROM restaurante WHERE idRestaurante = ?";
-
-        // Se o "ON DELETE CASCADE" estiver no Schema.sql, você só precisa disso:
-        jdbcTemplate.update(sqlRestaurante, id);
-
-        System.out.println("❌ Restaurante deletado com sucesso (e pratos em cascata)!");
+    // --- Outros métodos continuam iguais ---
+    public List<Restaurante> listarTodos() {
+        return jdbcTemplate.query("SELECT * FROM restaurante", restauranteRowMapper);
     }
 
-    // ALTERAR STATUS — ativa ou desativa um restaurante
-    public boolean atualizarStatus(int id, boolean ativo) {
-        String sql = "UPDATE restaurante SET ativo = ? WHERE idRestaurante = ?";
-        int rowsAffected = jdbcTemplate.update(sql, ativo, id);
-        return rowsAffected > 0;
-    }
-
-    // BUSCAR POR EMAIL — busca restaurante por email para autenticação
-    public java.util.Optional<Restaurante> buscarPorEmail(String email) {
-        String sql = "SELECT * FROM restaurante WHERE email = ?";
+    public Restaurante buscarPorId(int id) {
         try {
-            Restaurante restaurante = jdbcTemplate.queryForObject(sql, restauranteRowMapper, email);
-            return java.util.Optional.ofNullable(restaurante);
+            return jdbcTemplate.queryForObject("SELECT * FROM restaurante WHERE idRestaurante = ?", restauranteRowMapper, id);
         } catch (Exception e) {
-            return java.util.Optional.empty();
+            return null;
         }
     }
 
-    // BUSCAR POR ID COM OPTIONAL — busca restaurante por ID retornando Optional
     public java.util.Optional<Restaurante> buscarPorIdOptional(int id) {
-        String sql = "SELECT * FROM restaurante WHERE idRestaurante = ?";
+        return java.util.Optional.ofNullable(buscarPorId(id));
+    }
+
+    public void deletar(int id) {
+        jdbcTemplate.update("DELETE FROM restaurante WHERE idRestaurante = ?", id);
+    }
+
+    public boolean atualizarStatus(int id, boolean ativo) {
+        return jdbcTemplate.update("UPDATE restaurante SET ativo = ? WHERE idRestaurante = ?", ativo, id) > 0;
+    }
+
+    public java.util.Optional<Restaurante> buscarPorEmail(String email) {
         try {
-            Restaurante restaurante = jdbcTemplate.queryForObject(sql, restauranteRowMapper, id);
-            return java.util.Optional.ofNullable(restaurante);
+            return java.util.Optional.ofNullable(jdbcTemplate.queryForObject("SELECT * FROM restaurante WHERE email = ?", restauranteRowMapper, email));
         } catch (Exception e) {
             return java.util.Optional.empty();
         }

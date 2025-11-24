@@ -1,4 +1,3 @@
-// PratoService.java
 package br.inatel.ailarica.Restaurantes;
 
 import org.springframework.stereotype.Service;
@@ -8,58 +7,70 @@ import java.util.Optional;
 @Service
 public class PratoService {
 
-    // 1. Você declara os CAMPOS (objetos) que você precisa
     private final PratoDAO pratoDAO;
     private final RestauranteDAO restauranteDAO;
 
-    // 2. Você pede ao Spring para injetá-los no CONSTRUTOR
     public PratoService(PratoDAO pratoDAO, RestauranteDAO restauranteDAO) {
-        this.pratoDAO = pratoDAO; // O Spring te dá o objeto, você salva
+        this.pratoDAO = pratoDAO;
         this.restauranteDAO = restauranteDAO;
     }
 
-    // ... (outros métodos) ...
+    // --- MÉTODOS DE LEITURA (Públicos) ---
 
-    // 3. Você usa o CAMPO (o objeto) para chamar o método
     public Optional<Prato> buscarPratoPorId(int idPrato) {
-        //   👇
-        return Optional.ofNullable(pratoDAO.buscarPorId(idPrato)); // CORRETO (usando o objeto)
-        //   👇
-        // return Optional.ofNullable(PratoDAO.buscarPorId(idPrato)); // ERRADO (chamada estática)
+        return Optional.ofNullable(pratoDAO.buscarPorId(idPrato));
     }
+
+    public List<Prato> listarPratosDoRestaurante(int idRestaurante) {
+        return pratoDAO.listarPorRestaurante(idRestaurante);
+    }
+
+    // --- MÉTODOS DE ESCRITA (Restritos) ---
 
     public Prato criarPrato(int idRestaurante, Prato novoPrato) {
         if (restauranteDAO.buscarPorId(idRestaurante) == null) {
             return null;
         }
-        //   👇
-        return pratoDAO.criar(novoPrato, idRestaurante); // CORRETO (usando o objeto)
+        return pratoDAO.criar(novoPrato, idRestaurante);
     }
 
-    public Optional<Prato> atualizarPrato(int idPrato, Prato pratoAtualizado) {
-        //   👇
-        if (pratoDAO.buscarPorId(idPrato) == null) { // CORRETO
-            return Optional.empty();
+    // 🔒 ATUALIZAÇÃO SEGURA
+    public Optional<Prato> atualizarPrato(int idPrato, int idRestauranteLogado, Prato pratoAtualizado) {
+        Prato existente = pratoDAO.buscarPorId(idPrato);
+
+        if (existente == null) {
+            return Optional.empty(); // Prato não existe
         }
+
+        // --- A BLINDAGEM CONTRA IDOR ---
+        if (existente.getIdRestaurante() != idRestauranteLogado) {
+            // Tentativa de alterar prato de outro restaurante!
+            return Optional.empty(); // Retorna vazio como se não existisse (ou lança erro)
+        }
+        // -------------------------------
+
         pratoAtualizado.setIdPrato(idPrato);
-        //   👇
-        pratoDAO.atualizar(pratoAtualizado); // CORRETO
+        pratoAtualizado.setIdRestaurante(idRestauranteLogado); // Garante a propriedade
+        pratoDAO.atualizar(pratoAtualizado);
         return Optional.of(pratoAtualizado);
     }
 
-    public boolean deletarPrato(int idPrato) {
-        //   👇
-        if (pratoDAO.buscarPorId(idPrato) == null) { // CORRETO
+    // 🔒 DELEÇÃO SEGURA
+    public boolean deletarPrato(int idPrato, int idRestauranteLogado) {
+        Prato existente = pratoDAO.buscarPorId(idPrato);
+
+        if (existente == null) {
             return false;
         }
-        //   👇
-        pratoDAO.deletarPorId(idPrato); // CORRETO
-        return true;
-    }
 
-    // ... (método listarPratosDoRestaurante) ...
-    public List<Prato> listarPratosDoRestaurante(int idRestaurante) {
-        //   👇
-        return pratoDAO.listarPorRestaurante(idRestaurante); // CORRETO
+        // --- A BLINDAGEM CONTRA IDOR ---
+        if (existente.getIdRestaurante() != idRestauranteLogado) {
+            // Tentativa de deletar prato de outro restaurante!
+            return false;
+        }
+        // -------------------------------
+
+        pratoDAO.deletarPorId(idPrato);
+        return true;
     }
 }

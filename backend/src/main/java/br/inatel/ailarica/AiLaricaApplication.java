@@ -11,6 +11,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class AiLaricaApplication {
     public static void main(String[] args) {
         SpringApplication.run(AiLaricaApplication.class, args);
-        System.out.println("🚀 Servidor iniciado em http://localhost:8080/");
+        System.out.println("🚀 Servidor iniciado em http://localhost:8000/");
     }
 }

@@ -1,5 +1,8 @@
 package br.inatel.ailarica;
 
+import br.inatel.ailarica.Cliente.UsuarioService;
+import br.inatel.ailarica.Cliente.Usuario;
+import br.inatel.ailarica.Cliente.UsuarioDAO;
 import br.inatel.ailarica.security.PasswordEncoder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

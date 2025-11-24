@@ -1,4 +1,6 @@
 package br.inatel.ailarica.Login;
+import br.inatel.ailarica.Cliente.Usuario;
+import br.inatel.ailarica.Cliente.UsuarioService;
 
 /**
  * Classe de resposta para requisições de autenticação.

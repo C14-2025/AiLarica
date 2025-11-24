@@ -2,6 +2,7 @@ package br.inatel.ailarica;
 
 import br.inatel.ailarica.Restaurantes.Restaurante;
 import br.inatel.ailarica.Restaurantes.RestauranteAuthService;
+import br.inatel.ailarica.Restaurantes.RestauranteService; // <--- NOVO IMPORT
 import br.inatel.ailarica.security.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,11 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import br.inatel.ailarica.Login.AuthController;
+import br.inatel.ailarica.Login.LoginRequest;
+import br.inatel.ailarica.Login.AuthResponse;
+import br.inatel.ailarica.Cliente.*;
 
 import java.util.Optional;
 
@@ -31,6 +37,9 @@ class AuthControllerTest {
     private RestauranteAuthService restauranteAuthService;
 
     @Mock
+    private RestauranteService restauranteService; // <--- NOVO MOCK
+
+    @Mock
     private JwtTokenProvider jwtTokenProvider;
 
     private AuthController authController;
@@ -38,7 +47,13 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        authController = new AuthController(usuarioService, restauranteAuthService, jwtTokenProvider);
+        // ATUALIZADO: Adicionado o restauranteService como terceiro argumento
+        authController = new AuthController(
+                usuarioService,
+                restauranteAuthService,
+                restauranteService,
+                jwtTokenProvider
+        );
     }
 
     // ============ TESTES DE LOGIN DE USUÁRIO ============
@@ -48,10 +63,10 @@ class AuthControllerTest {
     void testLoginUsuarioComSucesso() {
         // Arrange
         LoginRequest loginRequest = new LoginRequest(
-            "usuario@example.com",
-            "Senha@123",
-            "USUARIO",
-            "Rua Principal, 123"
+                "usuario@example.com",
+                "Senha@123",
+                "USUARIO",
+                "Rua Principal, 123"
         );
 
         Usuario usuario = new Usuario("João Silva", "usuario@example.com", "Senha@123", "Rua Principal, 123", "USUARIO");
@@ -59,9 +74,9 @@ class AuthControllerTest {
         String token = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9...";
 
         when(usuarioService.loginUsuario(
-            loginRequest.getEmail(),
-            loginRequest.getSenha(),
-            loginRequest.getEndereco()
+                loginRequest.getEmail(),
+                loginRequest.getSenha(),
+                loginRequest.getEndereco()
         )).thenReturn(usuario);
         when(jwtTokenProvider.generateToken(1, "usuario@example.com", "USUARIO")).thenReturn(token);
 
@@ -83,10 +98,10 @@ class AuthControllerTest {
     void testLoginUsuarioComEnderecoVazio() {
         // Arrange
         LoginRequest loginRequest = new LoginRequest(
-            "usuario@example.com",
-            "Senha@123",
-            "USUARIO",
-            ""
+                "usuario@example.com",
+                "Senha@123",
+                "USUARIO",
+                ""
         );
 
         // Act
@@ -104,10 +119,10 @@ class AuthControllerTest {
     void testLoginComEmailVazio() {
         // Arrange
         LoginRequest loginRequest = new LoginRequest(
-            "",
-            "Senha@123",
-            "USUARIO",
-            "Rua Principal, 123"
+                "",
+                "Senha@123",
+                "USUARIO",
+                "Rua Principal, 123"
         );
 
         // Act
@@ -124,10 +139,10 @@ class AuthControllerTest {
     void testLoginComSenhaVazia() {
         // Arrange
         LoginRequest loginRequest = new LoginRequest(
-            "usuario@example.com",
-            "",
-            "USUARIO",
-            "Rua Principal, 123"
+                "usuario@example.com",
+                "",
+                "USUARIO",
+                "Rua Principal, 123"
         );
 
         // Act
@@ -144,10 +159,10 @@ class AuthControllerTest {
     void testLoginComTipoVazio() {
         // Arrange
         LoginRequest loginRequest = new LoginRequest(
-            "usuario@example.com",
-            "Senha@123",
-            "",
-            "Rua Principal, 123"
+                "usuario@example.com",
+                "Senha@123",
+                "",
+                "Rua Principal, 123"
         );
 
         // Act
@@ -164,16 +179,16 @@ class AuthControllerTest {
     void testLoginUsuarioComCredenciaisInvalidas() {
         // Arrange
         LoginRequest loginRequest = new LoginRequest(
-            "usuario@example.com",
-            "SenhaErrada@123",
-            "USUARIO",
-            "Rua Principal, 123"
+                "usuario@example.com",
+                "SenhaErrada@123",
+                "USUARIO",
+                "Rua Principal, 123"
         );
 
         when(usuarioService.loginUsuario(
-            loginRequest.getEmail(),
-            loginRequest.getSenha(),
-            loginRequest.getEndereco()
+                loginRequest.getEmail(),
+                loginRequest.getSenha(),
+                loginRequest.getEndereco()
         )).thenReturn(null);
 
         // Act
@@ -192,10 +207,10 @@ class AuthControllerTest {
     void testLoginRestauranteComSucesso() {
         // Arrange
         LoginRequest loginRequest = new LoginRequest(
-            "restaurante@example.com",
-            "Senha@123",
-            "RESTAURANTE",
-            null
+                "restaurante@example.com",
+                "Senha@123",
+                "RESTAURANTE",
+                null
         );
 
         Restaurante restaurante = new Restaurante();
@@ -208,8 +223,8 @@ class AuthControllerTest {
         String token = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9...";
 
         when(restauranteAuthService.loginRestaurante(
-            loginRequest.getEmail(),
-            loginRequest.getSenha()
+                loginRequest.getEmail(),
+                loginRequest.getSenha()
         )).thenReturn(restaurante);
         when(jwtTokenProvider.generateToken(1, "restaurante@example.com", "RESTAURANTE")).thenReturn(token);
 
@@ -231,15 +246,15 @@ class AuthControllerTest {
     void testLoginRestauranteComCredenciaisInvalidas() {
         // Arrange
         LoginRequest loginRequest = new LoginRequest(
-            "restaurante@example.com",
-            "SenhaErrada@123",
-            "RESTAURANTE",
-            null
+                "restaurante@example.com",
+                "SenhaErrada@123",
+                "RESTAURANTE",
+                null
         );
 
         when(restauranteAuthService.loginRestaurante(
-            loginRequest.getEmail(),
-            loginRequest.getSenha()
+                loginRequest.getEmail(),
+                loginRequest.getSenha()
         )).thenReturn(null);
 
         // Act
@@ -256,10 +271,10 @@ class AuthControllerTest {
     void testLoginComTipoInvalido() {
         // Arrange
         LoginRequest loginRequest = new LoginRequest(
-            "usuario@example.com",
-            "Senha@123",
-            "TIPO_INVALIDO",
-            "Rua Principal, 123"
+                "usuario@example.com",
+                "Senha@123",
+                "TIPO_INVALIDO",
+                "Rua Principal, 123"
         );
 
         // Act
@@ -369,7 +384,7 @@ class AuthControllerTest {
         restauranteExistente.setEmail("restaurante@example.com");
 
         when(restauranteAuthService.buscarPorEmail("restaurante@example.com"))
-            .thenReturn(Optional.of(restauranteExistente));
+                .thenReturn(Optional.of(restauranteExistente));
 
         // Act
         ResponseEntity<String> response = authController.cadastroRestaurante(restaurante);
