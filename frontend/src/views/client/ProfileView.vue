@@ -6,7 +6,7 @@
       <form @submit.prevent="updateProfile" class="space-y-4">
         <div class="flex items-center space-x-4 mb-6">
           <div class="w-20 h-20 rounded-full bg-red-500 flex items-center justify-center text-white text-3xl font-bold">
-            {{ user.initials }}
+            {{ initials }}
           </div>
           <div>
             <h2 class="text-xl font-semibold">{{ user.name }}</h2>
@@ -89,12 +89,12 @@ const user = ref({
 const initials = computed(() => {
   const parts = user.value.name.split(' ');
   if (parts.length >= 2) {
-    return parts[0][0] + parts[parts.length - 1][0];
+    return (parts[0]?.[0] ?? '') + (parts[parts.length - 1]?.[0] ?? '');
   }
-  return parts[0][0];
+  return parts[0]?.[0] ?? '';
 });
 
-user.value.initials = initials.value;
+// Removed assignment of initials to user object
 
 const updateProfile = async () => {
   try {

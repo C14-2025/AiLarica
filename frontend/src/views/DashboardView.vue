@@ -81,7 +81,7 @@
             <RestaurantStatus
               :restaurantName="restaurantData.name"
               :isOpen="restaurantData.isOpen"
-              :avgTime="String(stats.avgTime)"
+              :avgTime="parseFloat(stats.avgTime)"
             :acceptanceRate="stats.acceptanceRate"
             @toggleStatus="toggleRestaurantStatus"
             />

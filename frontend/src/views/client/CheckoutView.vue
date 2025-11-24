@@ -83,7 +83,7 @@ const cartItems = cartStore.cartItems;
 const mockCartItems = [
   { id: 101, name: 'Pizza Calabresa', price: 45.00, quantity: 1 },
   { id: 201, name: 'Combinado Salmão', price: 89.90, quantity: 2 },
-]);
+];
 
 const deliveryFee = cartStore.deliveryFee;
 const paymentMethod = ref('');

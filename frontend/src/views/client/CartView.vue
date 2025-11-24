@@ -68,8 +68,8 @@ const cartItems = cartStore.cartItems;
 
 const mockCartItems = [
   { id: 101, name: 'Pizza Calabresa', restaurant: 'Pizzaria do Chef', price: 45.00, quantity: 1, image: 'https://via.placeholder.com/64/FF5757/FFFFFF?text=P1' },
-  { id: 201, name: 'Combinado Salmão', restaurant: 'Japa Food Express', price: 89.90, quantity: 2, image: 'https://via.placeholder.com/64/FF5757/FFFFFF?text=P2' },
-]);
+  { id: 201, name: 'Combinado Salmão', restaurant: 'Japa Food Express', price: 89.90, quantity: 2, image: 'https://via.placeholder.com/64/FF5757/FFFFFF?text=P2' }
+];
 
 const deliveryFee = cartStore.deliveryFee;
 
@@ -77,11 +77,11 @@ const subtotal = cartStore.subtotal;
 const total = cartStore.total;
 
 const increaseQuantity = (id: number) => {
-  cartStore.updateQuantity(id, (cartStore.cartItems.find(i => i.id === id)?.quantity || 0) + 1);
+  cartStore.updateQuantity(id, (cartStore.cartItems.value.find(i => i.id === id)?.quantity || 0) + 1);
 };
 
 const decreaseQuantity = (id: number) => {
-  const item = cartStore.cartItems.find(i => i.id === id);
+  const item = cartStore.cartItems.value.find(i => i.id === id);
   if (item && item.quantity > 1) {
     cartStore.updateQuantity(id, item.quantity - 1);
   }

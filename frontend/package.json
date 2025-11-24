@@ -14,6 +14,7 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "@vue/eslint-config-prettier": "^10.2.0",
     "axios": "^1.13.2",
     "vue": "^3.5.22",
     "vue-router": "^4.6.3"
@@ -21,10 +22,15 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.17",
     "@tsconfig/node22": "^22.0.2",
+    "@types/eslint": "^9.6.1",
     "@types/node": "^22.18.11",
     "@vitejs/plugin-vue": "^6.0.1",
+    "@vitest/eslint-plugin": "^1.4.4",
+    "@vue/eslint-config-typescript": "^14.6.0",
     "@vue/tsconfig": "^0.8.1",
     "autoprefixer": "^10.4.22",
+    "eslint": "^9.39.1",
+    "eslint-plugin-oxlint": "^1.30.0",
     "npm-run-all2": "^8.0.4",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.17",

@@ -62,11 +62,7 @@
               type="email"
               autocomplete="email"
               required
-<<<<<<< HEAD
-              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-ailarica-orange focus:border-ailarica-orange sm:text-sm"
-=======
-              v-model="email" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
->>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
+              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
             />
           </div>
         </div>
@@ -78,16 +74,12 @@
           <div class="mt-1">
             <input
               id="password"
-              v-model="password"
+              v-model="senha"
               name="password"
               type="password"
               autocomplete="current-password"
               required
-<<<<<<< HEAD
-              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-ailarica-orange focus:border-ailarica-orange sm:text-sm"
-=======
-              v-model="senha" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
->>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
+              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
             />
           </div>
         </div>
@@ -133,52 +125,13 @@ import { ref } from 'vue';
 import AuthService from '@/services/authService';
 import { useRouter } from 'vue-router';
 
-<<<<<<< HEAD
-const userType = ref<'user' | 'restaurant'>('user')
-const email = ref('')
-const password = ref('')
-const router = useRouter()
-const errorMessage = ref('')
-
-// Credenciais de teste
-const TEST_CREDENTIALS = {
-  user: {
-    email: 'cliente@teste.com',
-    password: 'senha123'
-  },
-  restaurant: {
-    email: 'admin@teste',
-    password: 'admin123'
-  }
-}
-
-const handleLogin = () => {
-  errorMessage.value = ''
-  
-  const testCreds = TEST_CREDENTIALS[userType.value]
-  
-  // Validação de credenciais de teste
-  if (email.value === testCreds.email && password.value === testCreds.password) {
-    // Armazenar token mock no localStorage
-    const mockToken = `mock_token_${userType.value}_${Date.now()}`
-    localStorage.setItem('token', mockToken)
-    localStorage.setItem('userType', userType.value)
-    localStorage.setItem('userEmail', email.value)
-    
-    // Redirecionar conforme o tipo de usuário
-    if (userType.value === 'restaurant') {
-      router.push('/restaurante/dashboard')
-    } else {
-      router.push('/usuario/home')
-    }
-  } else {
-    errorMessage.value = `Credenciais inválidas. Use: ${testCreds.email} / ${testCreds.password}`
-=======
 const router = useRouter();
 
 const userType = ref<'user' | 'restaurant'>('user');
 const email = ref("");
 const senha = ref("");
+
+const errorMessage = ref("");
 
 const handleLogin = async () => {
   try {
@@ -200,15 +153,19 @@ const handleLogin = async () => {
       router.push('/usuario/dashboard');
     }
 
-  } catch (error) {
+    console.error("Erro no login:", Error);
+    errorMessage.value = "Erro ao tentar fazer login. Verifique suas credenciais.";
     // ✅ CORREÇÃO AQUI: Não precisamos mais do alerta genérico
-    console.error("Erro no login:", error);
+    console.error("Erro no login:", Error);
 
     // ⚠️ Esta linha é crítica: Se houve um erro (catch), retornamos imediatamente
     // para garantir que o manipulador de evento termine sem acionar o F5.
-    return;
->>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
-  }
+  return;
+} 
+catch (error) {
+  console.error("Erro no login:", error);
+  errorMessage.value = "Erro ao tentar fazer login. Verifique suas credenciais.";
+}
 };
 </script>
 
