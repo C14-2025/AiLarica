@@ -53,7 +53,7 @@
               type="email"
               autocomplete="email"
               required
-              v-model="email" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
             />
           </div>
         </div>
@@ -70,7 +70,7 @@
               type="password"
               autocomplete="current-password"
               required
-              v-model="senha" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
             />
           </div>
         </div>
@@ -122,11 +122,14 @@ const router = useRouter();
 const userType = ref<'user' | 'restaurant'>('user');
 const email = ref("");
 const senha = ref("");
-
+const loading = ref(false); // ✅ CORREÇÃO: Adicionada a propriedade loading
 const errorMessage = ref("");
 
 const handleLogin = async () => {
   try {
+    loading.value = true; // ✅ Inicia o loading
+    errorMessage.value = ""; // ✅ Limpa mensagens de erro anteriores
+
     const body = {
       email: email.value,
       senha: senha.value,
@@ -145,14 +148,11 @@ const handleLogin = async () => {
       router.push('/usuario/dashboard');
     }
 
-    console.error("Erro no login:", Error);
+  } catch (error) { // ✅ CORREÇÃO: Adicionado o bloco catch
+    console.error("Erro no login:", error);
     errorMessage.value = "Erro ao tentar fazer login. Verifique suas credenciais.";
-    // ✅ CORREÇÃO AQUI: Não precisamos mais do alerta genérico
-    console.error("Erro no login:", Error);
-
-    // ⚠️ Esta linha é crítica: Se houve um erro (catch), retornamos imediatamente
-    // para garantir que o manipulador de evento termine sem acionar o F5.
-    return;
+  } finally { // ✅ CORREÇÃO: Adicionado o bloco finally
+    loading.value = false; // ✅ Para o loading independente do resultado
   }
 };
 </script>
