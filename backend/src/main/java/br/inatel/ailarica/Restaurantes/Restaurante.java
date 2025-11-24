@@ -1,171 +1,76 @@
 package br.inatel.ailarica.Restaurantes;
 
-// Removemos as importações do Lombok
 import java.util.ArrayList;
 import java.util.List;
 
-// Não usamos mais @Getter, @Setter, @ToString
 public class Restaurante {
+
     private int idRestaurante;
     private String nome;
     private String descricao;
-    private RestauranteHorario horarios;
     private String endereco;
     private String telefone;
     private float avaliacao;
     private boolean ativo;
     private String fotoPerfil;
+    private String email;
+    private String senha;
+
+    // ✅ CAMPO NOVO
+    private String tempoMedioEntrega;
+
+    // Objeto complexo de horários
+    private RestauranteHorario horarios;
+
+    // Lista de pratos (não vai pro banco na tabela restaurante, é apenas lógico)
     private List<Prato> cardapio = new ArrayList<>();
-    private String email; // NOVO: Email para autenticação
-    private String senha; // NOVO: Senha para autenticação
 
-    // Construtor padrão (que o Jackson usa)
     public Restaurante() {
-        // construtor padrão vazio
     }
 
-    // Construtor completo (que o código antigo usava)
-    public Restaurante(int idRestaurante, String nome, String descricao,
-                       RestauranteHorario horarios, String endereco,
-                       String telefone, boolean ativo, String fotoPerfil,
-                       List<Prato> cardapio) {
-        this.idRestaurante = idRestaurante;
-        this.nome = nome;
-        this.descricao = descricao;
-        this.horarios = horarios;
-        this.endereco = endereco;
-        this.telefone = telefone;
-        this.ativo = ativo;
-        this.fotoPerfil = fotoPerfil;
-        this.cardapio = cardapio;
-        this.avaliacao = 0.0f; // valor padrão
+    // --- GETTERS E SETTERS MANUAIS (Para garantir que funcione sem Lombok) ---
+
+    public String getTempoMedioEntrega() {
+        return tempoMedioEntrega;
     }
 
-    // --- Métodos antigos ---
-    public void setHora() {
-        this.horarios.setHorarios(); // apenas chama o método
+    public void setTempoMedioEntrega(String tempoMedioEntrega) {
+        this.tempoMedioEntrega = tempoMedioEntrega;
     }
 
-    public void ativar() {
-        this.ativo = true;
-    }
+    public int getIdRestaurante() { return idRestaurante; }
+    public void setIdRestaurante(int idRestaurante) { this.idRestaurante = idRestaurante; }
 
-    public void desativar() {
-        this.ativo = false;
-    }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
 
-    public void adicionarPrato(Prato prato) {
-        cardapio.add(prato);
-    }
+    public String getDescricao() { return descricao; }
+    public void setDescricao(String descricao) { this.descricao = descricao; }
 
-    public void removerPrato(int idPrato) {
-        cardapio.removeIf(p -> p.getIdPrato() == idPrato);
-    }
+    public String getEndereco() { return endereco; }
+    public void setEndereco(String endereco) { this.endereco = endereco; }
 
-    public Prato buscarPratoPorNome(String nome) {
-        for (Prato p : cardapio) {
-            if (p.getNome().equalsIgnoreCase(nome)) {
-                return p;
-            }
-        }
-        return null;
-    }
+    public String getTelefone() { return telefone; }
+    public void setTelefone(String telefone) { this.telefone = telefone; }
 
-    // --- GETTERS E SETTERS MANUAIS (O que vai corrigir o erro 400) ---
+    public float getAvaliacao() { return avaliacao; }
+    public void setAvaliacao(float avaliacao) { this.avaliacao = avaliacao; }
 
-    public int getIdRestaurante() {
-        return idRestaurante;
-    }
+    public boolean isAtivo() { return ativo; }
+    public void setAtivo(boolean ativo) { this.ativo = ativo; }
 
-    public void setIdRestaurante(int idRestaurante) {
-        this.idRestaurante = idRestaurante;
-    }
+    public String getFotoPerfil() { return fotoPerfil; }
+    public void setFotoPerfil(String fotoPerfil) { this.fotoPerfil = fotoPerfil; }
 
-    public String getNome() {
-        return nome;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
+    public String getSenha() { return senha; }
+    public void setSenha(String senha) { this.senha = senha; }
 
-    public String getDescricao() {
-        return descricao;
-    }
+    public RestauranteHorario getHorarios() { return horarios; }
+    public void setHorarios(RestauranteHorario horarios) { this.horarios = horarios; }
 
-    public void setDescricao(String descricao) {
-        this.descricao = descricao;
-    }
-
-    public RestauranteHorario getHorarios() {
-        return horarios;
-    }
-
-    public void setHorarios(RestauranteHorario horarios) {
-        this.horarios = horarios;
-    }
-
-    public String getEndereco() {
-        return endereco;
-    }
-
-    public void setEndereco(String endereco) {
-        this.endereco = endereco;
-    }
-
-    public String getTelefone() {
-        return telefone;
-    }
-
-    public void setTelefone(String telefone) {
-        this.telefone = telefone;
-    }
-
-    public float getAvaliacao() {
-        return avaliacao;
-    }
-
-    public void setAvaliacao(float avaliacao) {
-        this.avaliacao = avaliacao;
-    }
-
-    public boolean isAtivo() {
-        return ativo;
-    }
-
-    public void setAtivo(boolean ativo) {
-        this.ativo = ativo;
-    }
-
-    public String getFotoPerfil() {
-        return fotoPerfil;
-    }
-
-    public void setFotoPerfil(String fotoPerfil) {
-        this.fotoPerfil = fotoPerfil;
-    }
-
-    public List<Prato> getCardapio() {
-        return cardapio;
-    }
-
-    public void setCardapio(List<Prato> cardapio) {
-        this.cardapio = cardapio;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getSenha() {
-        return senha;
-    }
-
-    public void setSenha(String senha) {
-        this.senha = senha;
-    }
+    public List<Prato> getCardapio() { return cardapio; }
+    public void setCardapio(List<Prato> cardapio) { this.cardapio = cardapio; }
 }
