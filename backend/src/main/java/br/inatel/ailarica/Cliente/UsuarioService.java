@@ -55,6 +55,28 @@ public class UsuarioService {
         return true;
     }
 
+    public boolean atualizarDados(int id, Usuario novosDados) {
+        Optional<Usuario> usuarioOpt = usuarioDAO.buscarPorId(id);
+
+        if (usuarioOpt.isPresent()) {
+            Usuario usuarioExistente = usuarioOpt.get();
+
+            // Atualiza apenas o que é permitido
+            if (novosDados.getNome() != null) {
+                usuarioExistente.setNome(novosDados.getNome());
+            }
+            if (novosDados.getEndereco() != null) {
+                usuarioExistente.setEndereco(novosDados.getEndereco());
+            }
+
+            // O DAO.atualizar geralmente atualiza tudo, então garantimos
+            // que senha e email continuam os mesmos do objeto existente
+            usuarioDAO.atualizar(usuarioExistente);
+            return true;
+        }
+        return false;
+    }
+
     public boolean atualizarSenha(String email, String senhaAntiga, String novaSenha) {
         if (!isSenhaValida(novaSenha)) return false;
 
