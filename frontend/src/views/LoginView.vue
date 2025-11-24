@@ -10,7 +10,6 @@
         </p>
       </div>
 
-      <!-- Toggle entre Usuário e Restaurante -->
       <div class="flex mb-6 rounded-lg bg-gray-200 p-1">
         <button
           @click="userType = 'user'"
@@ -63,7 +62,11 @@
               type="email"
               autocomplete="email"
               required
+<<<<<<< HEAD
               class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-ailarica-orange focus:border-ailarica-orange sm:text-sm"
+=======
+              v-model="email" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+>>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
             />
           </div>
         </div>
@@ -80,7 +83,11 @@
               type="password"
               autocomplete="current-password"
               required
+<<<<<<< HEAD
               class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-ailarica-orange focus:border-ailarica-orange sm:text-sm"
+=======
+              v-model="senha" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+>>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
             />
           </div>
         </div>
@@ -122,9 +129,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref } from 'vue';
+import AuthService from '@/services/authService';
+import { useRouter } from 'vue-router';
 
+<<<<<<< HEAD
 const userType = ref<'user' | 'restaurant'>('user')
 const email = ref('')
 const password = ref('')
@@ -164,8 +173,43 @@ const handleLogin = () => {
     }
   } else {
     errorMessage.value = `Credenciais inválidas. Use: ${testCreds.email} / ${testCreds.password}`
+=======
+const router = useRouter();
+
+const userType = ref<'user' | 'restaurant'>('user');
+const email = ref("");
+const senha = ref("");
+
+const handleLogin = async () => {
+  try {
+    const body = {
+      email: email.value,
+      senha: senha.value,
+      tipo: userType.value === 'user' ? 'USUARIO' : 'RESTAURANTE',
+      endereco: userType.value === 'user' ? 'Endereço Não Requerido no Login' : 'N/A'
+    };
+
+    const response = await AuthService.login(body);
+
+    console.log("Login bem-sucedido!", response);
+    console.log("Usuário logado:", response.nome, " | Tipo:", response.tipo);
+
+    if (userType.value === 'restaurant') {
+      router.push('/restaurante/dashboard');
+    } else {
+      router.push('/usuario/dashboard');
+    }
+
+  } catch (error) {
+    // ✅ CORREÇÃO AQUI: Não precisamos mais do alerta genérico
+    console.error("Erro no login:", error);
+
+    // ⚠️ Esta linha é crítica: Se houve um erro (catch), retornamos imediatamente
+    // para garantir que o manipulador de evento termine sem acionar o F5.
+    return;
+>>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
   }
-}
+};
 </script>
 
 <style scoped>

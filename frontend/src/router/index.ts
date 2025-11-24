@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import DashboardView from '../views/DashboardView.vue'
+import authService from '../services/authService'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -91,26 +92,19 @@ const router = createRouter({
   ]
 })
 
-// Guard de navegação para verificar autenticação
+// Guard de navegação global
 router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token')
-  const userType = localStorage.getItem('userType')
-  const requiresAuth = to.meta.requiresAuth
-  const requiredRole = to.meta.role
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  const isAuthenticated = authService.isAuthenticated()
 
-  // Se a rota requer autenticação
-  if (requiresAuth) {
-    if (!token) {
-      // Não autenticado, redirecionar para login
-      next({ name: 'login' })
-    } else if (requiredRole && userType !== requiredRole) {
-      // Autenticado mas role não corresponde
-      next({ path: '/usuario/home' })
-    } else {
-      next()
-    }
+  if (requiresAuth && !isAuthenticated) {
+    // Rota requer autenticação mas usuário não está autenticado
+    next('/login')
+  } else if (to.path === '/login' && isAuthenticated) {
+    // Usuário já está autenticado tentando acessar login
+    next('/restaurante/dashboard')
   } else {
-    // Rota pública
+    // Permite a navegação
     next()
   }
 })

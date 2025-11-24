@@ -64,13 +64,15 @@ class PratoServiceTest {
     @Test
     void testAtualizarPrato_PratoNaoExiste() {
         // Cenário
+        int idRestauranteDono = 1; // <--- NOVO ID SIMULADO
         int idPrato = 50;
         Prato pratoAtualizado = new Prato();
 
         when(pratoDAO.buscarPorId(idPrato)).thenReturn(null);
 
         // Execução
-        Optional<Prato> resultado = pratoService.atualizarPrato(idPrato, pratoAtualizado);
+        // Passando o novo ID do Restaurante, conforme a nova assinatura do Service
+        Optional<Prato> resultado = pratoService.atualizarPrato(idPrato, idRestauranteDono, pratoAtualizado);
 
         // Verificação
         assertTrue(resultado.isEmpty());
