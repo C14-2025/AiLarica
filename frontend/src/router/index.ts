@@ -42,6 +42,12 @@ const router = createRouter({
       meta: { requiresAuth: true, role: 'restaurant' }
     },
     {
+      path: '/restaurante/settings',
+      name: 'restaurante-settings',
+      component: () => import('../views/SettingsView.vue'),
+      meta: { requiresAuth: true, role: 'restaurant' }
+    },
+    {
       path: '/usuario/home',
       name: 'Home',
       component: () => import('../views/client/HomeView.vue'),

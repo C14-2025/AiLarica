@@ -35,18 +35,9 @@
         </button>
       </div>
 
-      <!-- Mensagem de erro -->
-      <div v-if="errorMessage" class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
-        {{ errorMessage }}
-      </div>
-
-      <!-- Credenciais de teste -->
-      <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-800">
-        <p class="font-semibold mb-1">Credenciais de Teste:</p>
-        <p v-if="userType === 'user'">Email: <strong>cliente@teste.com</strong></p>
-        <p v-if="userType === 'user'">Senha: <strong>senha123</strong></p>
-        <p v-if="userType === 'restaurant'">Email: <strong>admin@teste</strong></p>
-        <p v-if="userType === 'restaurant'">Senha: <strong>admin123</strong></p>
+      <!-- Mensagem de Erro -->
+      <div v-if="errorMessage" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <p class="text-sm text-red-700">{{ errorMessage }}</p>
       </div>
 
       <form class="space-y-6" @submit.prevent="handleLogin">
@@ -62,7 +53,7 @@
               type="email"
               autocomplete="email"
               required
-              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+              v-model="email" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
             />
           </div>
         </div>
@@ -79,7 +70,7 @@
               type="password"
               autocomplete="current-password"
               required
-              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+              v-model="senha" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
             />
           </div>
         </div>
@@ -101,9 +92,10 @@
         <div>
           <button
             type="submit"
-            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-ailarica-red hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ailarica-red transition duration-150 ease-in-out"
+            :disabled="loading"
+            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Entrar como {{ userType === 'user' ? 'Usuário' : 'Restaurante' }}
+            {{ loading ? 'Entrando...' : `Entrar como ${userType === 'user' ? 'Usuário' : 'Restaurante'}` }}
           </button>
         </div>
       </form>
@@ -160,12 +152,8 @@ const handleLogin = async () => {
 
     // ⚠️ Esta linha é crítica: Se houve um erro (catch), retornamos imediatamente
     // para garantir que o manipulador de evento termine sem acionar o F5.
-  return;
-} 
-catch (error) {
-  console.error("Erro no login:", error);
-  errorMessage.value = "Erro ao tentar fazer login. Verifique suas credenciais.";
-}
+    return;
+  }
 };
 </script>
 

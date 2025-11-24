@@ -1,6 +1,11 @@
 <template>
+<<<<<<< HEAD
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 custom-dashboard-bg">
+    
+=======
   <div class="min-h-screen bg-gray-200 dark:bg-gray-200 custom-dashboard-bg">
 
+>>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
     <header class="bg-red-600 shadow-xl shadow-red-600/30 sticky top-0 z-50 custom-slide-down">
 
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex items-center justify-between">
@@ -15,6 +20,13 @@
           <h1 class="text-2xl sm:text-3xl font-bold text-white drop-shadow-md">Dashboard</h1>
         </div>
 
+<<<<<<< HEAD
+          <div class="flex items-center space-x-4 sm:space-x-6">
+            
+            <div class="relative text-3xl text-white cursor-pointer transition-transform duration-200 hover:scale-110 custom-shake">
+              <span class="drop-shadow-md">🔔</span>
+              <span class="absolute -top-1 -right-1 bg-yellow-400 text-red-700 text-xs font-extrabold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white custom-bounce">3</span>
+=======
         <div class="flex items-center space-x-4 sm:space-x-6">
 
           <div class="relative text-3xl text-white cursor-pointer transition-transform duration-200 hover:scale-110 custom-shake">
@@ -29,9 +41,14 @@
             <div class="hidden sm:flex flex-col text-sm">
               <span class="text-white font-bold">{{ restaurantData.name }}</span>
               <span class="text-white/90 text-xs font-medium">● Online</span>
+>>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
             </div>
+            
+            <UserMenu
+              :restaurantName="restaurantData.name"
+              :restaurantEmail="restaurantData.email"
+            />
           </div>
-        </div>
       </div>
     </header>
 
@@ -198,6 +215,7 @@ import RestaurantStatus from '@/views/RestaurantStatus.vue';
 import SalesChart from '@/views/SalesChart.vue';
 import MenuOverview from '@/views/MenuOverview.vue';
 import RecentOrders from '@/views/RecentOrders.vue';
+import UserMenu from '@/views/UserMenu.vue';
 
 const router = useRouter();
 
@@ -220,7 +238,12 @@ const headers = { 'Authorization': `Bearer ${token}` };
 const isLoading = ref(true); // ✅ NOVO: Estado de Carregamento
 
 const restaurantData = ref({
+<<<<<<< HEAD
+  name: 'Carregando...',
+  email: 'email@example.com',
+=======
   name: currentUser?.nome || 'Carregando...',
+>>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
   isOpen: false
 });
 
@@ -253,6 +276,16 @@ const fetchMetricsAndData = async () => {
 
   // 1. Fetch DTO CENTRALIZADO e Dados do Restaurante
   try {
+<<<<<<< HEAD
+    const response = await axios.get(`${API_BASE_URL}/restaurantes/${RESTAURANT_ID}`);
+    const data = response.data;
+    restaurantData.value.name = data.nome;
+    restaurantData.value.email = data.email || 'email@example.com';
+    restaurantData.value.isOpen = data.ativo;
+    localStorage.setItem('restaurantId', data.idRestaurante?.toString() || RESTAURANT_ID.toString());
+    // Adicionar lógica para carregar estatísticas reais se houver endpoint
+    // Por enquanto, mantemos as estatísticas mockadas ou ajustamos para 0
+=======
     const dashResponse = await axios.get(`${API_BASE_URL}/painel-restaurante/dashboard`, { headers });
     const data = dashResponse.data;
 
@@ -273,6 +306,7 @@ const fetchMetricsAndData = async () => {
     restaurantData.value.name = restResponse.data.nome;
     restaurantData.value.isOpen = restResponse.data.ativo;
 
+>>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
   } catch (error) {
     console.error('Erro ao buscar dados do dashboard:', error);
     if (axios.isAxiosError(error) && error.response?.status === 401) {
