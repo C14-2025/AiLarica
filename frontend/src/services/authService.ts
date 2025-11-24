@@ -66,15 +66,25 @@ class AuthService {
    * REGISTRO — Compatível com /usuarios/cadastro
    */
   async register(data: any): Promise<any> {
+    // ✅ 1. Definir o endpoint dinamicamente com base no 'tipo'
+    const endpoint = data.tipo === 'RESTAURANTE'
+      ? '/auth/cadastro/restaurante'
+      : '/auth/cadastro/usuario';
+
     try {
-      const response = await apiClient.post('/auth/cadastro/usuario', data); // Corrigi a rota para usar a de cadastro de USUARIO
+      // 2. Usar o endpoint dinâmico
+      const response = await apiClient.post(endpoint, data);
       return response.data;
 
     } catch (error) {
       if (isAxiosError(error) && error.response) {
-        const serverMessage = error.response.data || "Erro de rede/servidor.";
-        console.error('Erro no registro:', serverMessage);
-        throw error.response.data; // Lança o corpo do erro para o frontend
+        // ✅ 3. Melhorar o tratamento de erro para exibir a mensagem do Backend
+        const backendMessage = error.response.data?.mensagem || error.response.data;
+
+        console.error('Erro no registro:', backendMessage);
+
+        // Lançamos a mensagem de erro específica para o frontend exibir
+        throw backendMessage;
       }
       console.error('Erro no registro (desconhecido):', error);
       throw error;

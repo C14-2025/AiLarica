@@ -8,11 +8,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/usuarios") // Mudei a rota para fazer mais sentido
+@RequestMapping("/usuarios")
 public class ClientePedidoController {
 
     private final PedidoService pedidoService;
-    private final JwtTokenProvider jwtTokenProvider; // 1. Injetar o porteiro
+    private final JwtTokenProvider jwtTokenProvider;
 
     public ClientePedidoController(PedidoService pedidoService, JwtTokenProvider jwtTokenProvider) {
         this.pedidoService = pedidoService;
@@ -21,19 +21,17 @@ public class ClientePedidoController {
 
     /**
      * Método auxiliar para validar token e extrair ID
-     * Retorna null se o token for inválido
      */
     private Integer validarEObterId(String authHeader) {
         String token = jwtTokenProvider.extractTokenFromHeader(authHeader);
 
         if (token == null || !jwtTokenProvider.validateToken(token)) {
-            return null; // Token inválido ou ausente
+            return null;
         }
 
-        // Só aceita se for do tipo USUARIO
         String tipo = jwtTokenProvider.getTipoFromToken(token);
         if (!"USUARIO".equals(tipo)) {
-            return null; // Restaurante tentando agir como usuário
+            return null;
         }
 
         return jwtTokenProvider.getIdFromToken(token);
@@ -41,7 +39,6 @@ public class ClientePedidoController {
 
     /**
      * Endpoint para o CLIENTE criar um novo pedido
-     * AGORA SEGURO: Pega o ID do usuário direto do token
      */
     @PostMapping
     public ResponseEntity<?> criarPedido(@RequestHeader("Authorization") String authHeader,
@@ -53,17 +50,21 @@ public class ClientePedidoController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Acesso negado: Token inválido.");
         }
 
-        // FORÇA o ID do usuário ser o do token (impede fraude)
         novoPedido.setIdUsuario(idUsuarioLogado);
 
         Pedido pedidoCriado = pedidoService.criarPedido(novoPedido);
+
+        // ✅ TRATAMENTO DO RETORNO NULL (Restaurante Fechado)
+        if (pedidoCriado == null) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("Não foi possível criar o pedido: O restaurante está fechado ou não existe.");
+        }
+
         return ResponseEntity.ok(pedidoCriado);
     }
 
-    /**
-     * Endpoint para ver pedidos
-     * MUDANÇA: Removemos o {id} da URL. O sistema sabe quem é pelo token.
-     */
+    // ... (Demais métodos GET)
     @GetMapping
     public ResponseEntity<?> getMeusPedidos(@RequestHeader("Authorization") String authHeader) {
 
@@ -77,9 +78,6 @@ public class ClientePedidoController {
         return ResponseEntity.ok(pedidos);
     }
 
-    /**
-     * Endpoint para ver pedidos ativos
-     */
     @GetMapping("/ativos")
     public ResponseEntity<?> getMeusPedidosAtivos(@RequestHeader("Authorization") String authHeader) {
 
