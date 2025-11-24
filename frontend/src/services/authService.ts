@@ -1,59 +1,98 @@
-import apiClient from './api';
+import apiClient from './api.ts';
+import { isAxiosError } from 'axios'; // Importa a função de verificação do Axios
 
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface RegisterData {
-  nome: string;
+/**
+ * Payload enviado pelo login
+ */
+export interface LoginPayload {
   email: string;
   senha: string;
-  telefone?: string;
-  tipo?: string; // 'cliente' ou 'restaurante'
+  tipo: string;      // 'USUARIO' ou 'RESTAURANTE'
+  // Nota: O backend exige 'endereco' para Usuario no cadastro, mas não no login após a última correção.
 }
 
+/**
+ * Resposta REAL do backend no login
+ */
 export interface AuthResponse {
+  id: number;
+  nome: string;
+  email: string;
+  tipo: string;
+  endereco?: string; // Opcional, pois pode não vir para Restaurantes
   token: string;
-  user: any;
+  mensagem: string;
+  sucesso: boolean;
 }
 
+/**
+ * Serviço de autenticação
+ */
 class AuthService {
-  /**
-   * Realiza o login do usuário
-   */
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    try {
-      const response = await apiClient.post('/login', credentials);
 
-      // Salva o token no localStorage
-      if (response.data.token) {
-        localStorage.setItem('authToken', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+  /**
+   * LOGIN — Compatível com /auth/login
+   */
+  async login(payload: LoginPayload): Promise<AuthResponse> {
+    try {
+      const response = await apiClient.post('/auth/login', payload);
+
+      const data: AuthResponse = response.data;
+
+      // Salva o token
+      localStorage.setItem('authToken', data.token);
+
+      // Remove o token do usuário antes de salvar
+      const { token, ...user } = data;
+      localStorage.setItem('user', JSON.stringify(user));
+
+      return data;
+
+    } catch (error) {
+      // ✅ CORREÇÃO: Usar o isAxiosError para garantir o tipo e evitar o 'unknown'
+      if (isAxiosError(error) && error.response && error.response.status === 400) {
+        // Loga a mensagem exata do AuthController (Ex: "Email é obrigatório!")
+        // Verificamos se data e mensagem existem antes de tentar logar
+        const serverMessage = error.response.data?.mensagem;
+        console.error("Mensagem do Servidor (400):", serverMessage || "Erro de validação desconhecido.");
+      } else {
+        console.error("Erro desconhecido ou de rede:", error);
       }
-
-      return response.data;
-    } catch (error) {
-      console.error('Erro no login:', error);
-      throw error;
+      throw error; // Relança o erro para que a View possa tratar o feedback
     }
   }
 
   /**
-   * Realiza o registro de um novo usuário
+   * REGISTRO — Compatível com /usuarios/cadastro
    */
-  async register(data: RegisterData): Promise<any> {
+  async register(data: any): Promise<any> {
+    // ✅ 1. Definir o endpoint dinamicamente com base no 'tipo'
+    const endpoint = data.tipo === 'RESTAURANTE'
+      ? '/auth/cadastro/restaurante'
+      : '/auth/cadastro/usuario';
+
     try {
-      const response = await apiClient.post('/register', data);
+      // 2. Usar o endpoint dinâmico
+      const response = await apiClient.post(endpoint, data);
       return response.data;
+
     } catch (error) {
-      console.error('Erro no registro:', error);
+      if (isAxiosError(error) && error.response) {
+        // ✅ 3. Melhorar o tratamento de erro para exibir a mensagem do Backend
+        const backendMessage = error.response.data?.mensagem || error.response.data;
+
+        console.error('Erro no registro:', backendMessage);
+
+        // Lançamos a mensagem de erro específica para o frontend exibir
+        throw backendMessage;
+      }
+      console.error('Erro no registro (desconhecido):', error);
       throw error;
     }
   }
 
   /**
-   * Realiza o logout do usuário
+   * LOGOUT
    */
   logout(): void {
     localStorage.removeItem('authToken');
@@ -62,14 +101,14 @@ class AuthService {
   }
 
   /**
-   * Verifica se o usuário está autenticado
+   * VERIFICA LOGIN
    */
   isAuthenticated(): boolean {
     return !!localStorage.getItem('authToken');
   }
 
   /**
-   * Obtém o usuário atual do localStorage
+   * PEGA USUÁRIO
    */
   getCurrentUser(): any {
     const userStr = localStorage.getItem('user');
@@ -77,7 +116,7 @@ class AuthService {
   }
 
   /**
-   * Obtém o token de autenticação
+   * PEGA TOKEN
    */
   getToken(): string | null {
     return localStorage.getItem('authToken');

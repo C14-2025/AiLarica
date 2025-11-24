@@ -4,7 +4,7 @@
     <header class="bg-red-600 shadow-xl shadow-red-600/30 sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex items-center justify-between">
         <div class="flex items-center space-x-4">
-          <button 
+          <button
             @click="goBack"
             class="text-white hover:bg-red-700 p-2 rounded-lg transition-colors duration-200"
             title="Voltar ao Dashboard"
@@ -26,9 +26,9 @@
           <!-- Busca por ID -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Buscar por ID</label>
-            <input 
+            <input
               v-model="searchQuery"
-              type="text" 
+              type="text"
               placeholder="Ex: #123"
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all"
             />
@@ -37,7 +37,7 @@
           <!-- Filtro de Status -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por Status</label>
-            <select 
+            <select
               v-model="selectedStatus"
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all"
             >
@@ -53,7 +53,7 @@
           <!-- Ordenação -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Ordenar por</label>
-            <select 
+            <select
               v-model="sortBy"
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all"
             >
@@ -82,9 +82,15 @@
 
       <!-- Orders Grid -->
       <div v-else class="space-y-4">
+<<<<<<< HEAD
         <div 
           v-for="order in filteredOrders" 
           :key="order.id || order.idPedido"
+=======
+        <div
+          v-for="order in filteredOrders"
+          :key="resolveOrderId(order)"
+>>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
           class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden"
         >
           <div class="p-6">
@@ -126,8 +132,13 @@
             <div v-if="(order.items || order.itens)?.length > 0" class="mb-6 bg-gray-50 rounded-lg p-4">
               <p class="text-sm font-semibold text-gray-700 mb-3">Detalhes dos Itens:</p>
               <ul class="space-y-2">
+<<<<<<< HEAD
                 <li 
                   v-for="(item, index) in (order.items || order.itens)" 
+=======
+                <li
+                  v-for="(item, index) in (order.items ?? order.itens ?? [])"
+>>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
                   :key="index"
                   class="flex justify-between items-center text-sm text-gray-700"
                 >
@@ -139,7 +150,7 @@
 
             <!-- Ações -->
             <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
-              <button 
+              <button
                 v-if="canUpdateStatus(order.status)"
                 @click="updateOrderStatus(order.id || order.idPedido, getNextStatus(order.status))"
                 :disabled="updatingOrderId === (order.id || order.idPedido)"
@@ -148,15 +159,21 @@
                 <span v-if="updatingOrderId === (order.id || order.idPedido)" class="inline-block mr-2">⏳</span>
                 {{ getNextStatusText(order.status) }}
               </button>
+<<<<<<< HEAD
               
               <button 
                 @click="toggleOrderDetails(order.id || order.idPedido)"
+=======
+
+              <button
+                @click="toggleOrderDetails(resolveOrderId(order))"
+>>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
                 class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors duration-200"
               >
                 {{ expandedOrderId === (order.id || order.idPedido) ? '▼ Ocultar' : '▶ Detalhes' }}
               </button>
 
-              <button 
+              <button
                 v-if="order.status !== 'cancelado' && order.status !== 'entregue' && order.status !== 'cancelled' && order.status !== 'delivered'"
                 @click="cancelOrder(order.id || order.idPedido)"
                 class="flex-1 px-4 py-2 bg-red-100 text-red-600 font-semibold rounded-lg hover:bg-red-200 transition-colors duration-200"
@@ -166,8 +183,13 @@
             </div>
 
             <!-- Detalhes Expandidos -->
+<<<<<<< HEAD
             <div 
               v-if="expandedOrderId === (order.id || order.idPedido)"
+=======
+            <div
+              v-if="expandedOrderId === resolveOrderId(order)"
+>>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
               class="mt-4 pt-4 border-t border-gray-200"
             >
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -200,35 +222,37 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import AuthService from '@/services/authService'; // ✅ NOVO IMPORT DE SEGURANÇA
+import { isAxiosError } from 'axios';
 
+// --- Interfaces (Mantenha as interfaces no seu arquivo Vue) ---
 interface ItemPedido {
-  id?: number;
-  nome?: string;
-  name?: string;
-  quantidade?: number;
-  quantity?: number;
-  preco?: number;
-  price?: number;
+  id?: number; nome?: string; name?: string;
+  quantidade?: number; quantity?: number;
+  preco?: number; price?: number;
 }
-
 interface Pedido {
-  id?: string;
-  idPedido?: number;
-  status: string;
-  total?: number;
-  valorTotal?: number;
-  dataHora?: string;
-  time?: string;
-  customerName?: string;
-  idUsuario?: number;
-  idRestaurante?: number;
-  items?: ItemPedido[];
-  itens?: ItemPedido[];
+  id?: string; idPedido?: number; status: string;
+  total?: number; valorTotal?: number; dataHora?: string; time?: string;
+  customerName?: string; idUsuario?: number; idRestaurante?: number;
+  items?: ItemPedido[]; itens?: ItemPedido[];
 }
+// --- Fim Interfaces ---
 
 const router = useRouter();
-const RESTAURANT_ID = 1;
 const API_BASE_URL = 'http://localhost:8080';
+
+// --- JWT/Token Setup ---
+const token = AuthService.getToken();
+const currentUser = AuthService.getCurrentUser();
+const headers = { 'Authorization': `Bearer ${token}` };
+
+// ✅ Guarda: Redireciona se não houver token ou se não for RESTAURANTE
+if (!token || currentUser?.tipo !== 'RESTAURANTE') {
+  AuthService.logout();
+  if (!token) router.push('/login');
+}
+// -----------------------
 
 const orders = ref<Pedido[]>([]);
 const loading = ref(false);
@@ -244,8 +268,17 @@ const goBack = () => {
 
 const fetchOrders = async () => {
   loading.value = true;
+  if (!token) {
+    loading.value = false;
+    return;
+  }
+
   try {
-    const response = await axios.get(`${API_BASE_URL}/restaurantes/${RESTAURANT_ID}/pedidos`);
+    // ✅ ROTA SEGURA: /painel-restaurante/historico
+    // O backend usa o token para saber o ID do restaurante
+    const response = await axios.get(`${API_BASE_URL}/painel-restaurante/historico`, { headers });
+
+    // Mapeamento dos dados
     orders.value = response.data.map((pedido: any) => ({
       id: pedido.idPedido?.toString() || pedido.id?.toString(),
       idPedido: pedido.idPedido || pedido.id,
@@ -262,26 +295,45 @@ const fetchOrders = async () => {
     }));
   } catch (error) {
     console.error('Erro ao buscar pedidos:', error);
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      AuthService.logout(); // Redireciona em caso de token inválido
+    }
     orders.value = [];
   } finally {
     loading.value = false;
   }
 };
 
+<<<<<<< HEAD
+=======
+const resolveOrderId = (order: Pedido): string | number => {
+  return order.id ?? order.idPedido ?? '';
+};
+
+// --- Funções Computadas e Lógica de Status (Mantidas) ---
+// (filteredOrders, statusText, getStatusBadgeClass, formatPrice, formatDateTime, etc.)
+
+
+>>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
 const filteredOrders = computed(() => {
   let result = [...orders.value];
 
   // Filtrar por busca
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase().replace('#', '');
+<<<<<<< HEAD
     result = result.filter(order => 
       (order.id || order.idPedido)?.toString().includes(query)
+=======
+    result = result.filter(order =>
+      (((order.id ?? order.idPedido) ?? '') as string).toString().toLowerCase().includes(query)
+>>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
     );
   }
 
   // Filtrar por status
   if (selectedStatus.value) {
-    result = result.filter(order => 
+    result = result.filter(order =>
       order.status.toLowerCase() === selectedStatus.value.toLowerCase()
     );
   }
@@ -292,7 +344,7 @@ const filteredOrders = computed(() => {
     const bTime = b.time || b.dataHora || '';
     const aTotal = a.total || a.valorTotal || 0;
     const bTotal = b.total || b.valorTotal || 0;
-    
+
     switch (sortBy.value) {
       case 'oldest':
         return new Date(aTime).getTime() - new Date(bTime).getTime();
@@ -311,15 +363,9 @@ const filteredOrders = computed(() => {
 
 const statusText = (status: string): string => {
   const textMap: Record<string, string> = {
-    'pendente': 'Pendente',
-    'preparando': 'Preparando',
-    'em_entrega': 'Em Entrega',
-    'entregue': 'Entregue',
-    'cancelado': 'Cancelado',
-    'pending': 'Pendente',
-    'preparing': 'Preparando',
-    'delivering': 'Em Entrega',
-    'delivered': 'Entregue',
+    'pendente': 'Pendente', 'preparando': 'Preparando', 'em_entrega': 'Em Entrega',
+    'entregue': 'Entregue', 'cancelado': 'Cancelado', 'pending': 'Pendente',
+    'preparing': 'Preparando', 'delivering': 'Em Entrega', 'delivered': 'Entregue',
     'cancelled': 'Cancelado',
   };
   return textMap[status.toLowerCase()] || 'Desconhecido';
@@ -327,16 +373,11 @@ const statusText = (status: string): string => {
 
 const getStatusBadgeClass = (status: string): string => {
   const classMap: Record<string, string> = {
-    'pendente': 'bg-yellow-100 text-yellow-800',
-    'preparando': 'bg-blue-100 text-blue-800',
-    'em_entrega': 'bg-purple-100 text-purple-800',
-    'entregue': 'bg-green-100 text-green-800',
-    'cancelado': 'bg-red-100 text-red-800',
-    'pending': 'bg-yellow-100 text-yellow-800',
-    'preparing': 'bg-blue-100 text-blue-800',
-    'delivering': 'bg-purple-100 text-purple-800',
-    'delivered': 'bg-green-100 text-green-800',
-    'cancelled': 'bg-red-100 text-red-800',
+    'pendente': 'bg-yellow-100 text-yellow-800', 'preparando': 'bg-blue-100 text-blue-800',
+    'em_entrega': 'bg-purple-100 text-purple-800', 'entregue': 'bg-green-100 text-green-800',
+    'cancelado': 'bg-red-100 text-red-800', 'pending': 'bg-yellow-100 text-yellow-800',
+    'preparing': 'bg-blue-100 text-blue-800', 'delivering': 'bg-purple-100 text-purple-800',
+    'delivered': 'bg-green-100 text-green-800', 'cancelled': 'bg-red-100 text-red-800',
   };
   return classMap[status.toLowerCase()] || 'bg-gray-100 text-gray-800';
 };
@@ -383,36 +424,38 @@ const canUpdateStatus = (status: string): boolean => {
 
 const getNextStatus = (status: string): string => {
   const statusFlow: Record<string, string> = {
-    'pendente': 'preparando',
-    'preparando': 'em_entrega',
-    'em_entrega': 'entregue',
-    'pending': 'preparing',
-    'preparing': 'delivering',
-    'delivering': 'delivered'
+    'pendente': 'preparando', 'preparando': 'em_entrega', 'em_entrega': 'entregue',
+    'pending': 'preparing', 'preparing': 'delivering', 'delivering': 'delivered'
   };
   return statusFlow[status.toLowerCase()] || status;
 };
 
 const getNextStatusText = (status: string): string => {
   const textMap: Record<string, string> = {
-    'pendente': '👨‍🍳 Começar Preparação',
-    'preparando': '🛵 Enviar para Entrega',
-    'em_entrega': '✓ Marcar Entregue',
-    'pending': '👨‍🍳 Começar Preparação',
-    'preparing': '🛵 Enviar para Entrega',
-    'delivering': '✓ Marcar Entregue'
+    'pendente': '👨‍🍳 Começar Preparação', 'preparando': '🛵 Enviar para Entrega',
+    'em_entrega': '✓ Marcar Entregue', 'pending': '👨‍🍳 Começar Preparação',
+    'preparing': '🛵 Enviar para Entrega', 'delivering': '✓ Marcar Entregue'
   };
   return textMap[status.toLowerCase()] || 'Próximo Passo';
 };
 
 const updateOrderStatus = async (orderId: string | number, newStatus: string) => {
+<<<<<<< HEAD
+=======
+  if (!orderId || !token) {
+    alert('ID do pedido ou token inválido.');
+    return;
+  }
+>>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
   updatingOrderId.value = orderId;
   try {
+    // ✅ ROTA SEGURA
     await axios.put(
-      `${API_BASE_URL}/restaurantes/${RESTAURANT_ID}/pedidos/${orderId}/status`,
-      { novoStatus: newStatus }
+      `${API_BASE_URL}/painel-restaurante/pedidos/${orderId}/status`,
+      { novoStatus: newStatus },
+      { headers } // Adiciona o token de autorização
     );
-    
+
     // Atualizar o status localmente
     const order = orders.value.find(o => (o.id || o.idPedido) === orderId);
     if (order) {
@@ -423,21 +466,32 @@ const updateOrderStatus = async (orderId: string | number, newStatus: string) =>
     alert('Erro ao atualizar o status do pedido.');
   } finally {
     updatingOrderId.value = null;
+    fetchOrders(); // Recarrega a lista
   }
 };
 
 const cancelOrder = async (orderId: string | number) => {
+<<<<<<< HEAD
+=======
+  if (!orderId || !token) {
+    alert('ID do pedido ou token inválido.');
+    return;
+  }
+
+>>>>>>> 6e3a98edcfe924e3c01aca0d6e4dcadd39ed48f5
   if (!confirm('Tem certeza que deseja cancelar este pedido?')) {
     return;
   }
 
   updatingOrderId.value = orderId;
   try {
+    // ✅ ROTA SEGURA
     await axios.put(
-      `${API_BASE_URL}/restaurantes/${RESTAURANT_ID}/pedidos/${orderId}/status`,
-      { novoStatus: 'cancelado' }
+      `${API_BASE_URL}/painel-restaurante/pedidos/${orderId}/status`,
+      { novoStatus: 'cancelado' },
+      { headers } // Adiciona o token de autorização
     );
-    
+
     // Atualizar o status localmente
     const order = orders.value.find(o => (o.id || o.idPedido) === orderId);
     if (order) {
@@ -448,16 +502,21 @@ const cancelOrder = async (orderId: string | number) => {
     alert('Erro ao cancelar o pedido.');
   } finally {
     updatingOrderId.value = null;
+    fetchOrders(); // Recarrega
   }
 };
 
 onMounted(() => {
-  fetchOrders();
-  // Atualizar pedidos a cada 30 segundos
-  const interval = setInterval(fetchOrders, 30000);
-  
-  // Limpar intervalo ao desmontar o componente
-  return () => clearInterval(interval);
+  // Chamada inicial de pedidos se houver token
+  if (token) {
+    fetchOrders();
+    const interval = setInterval(fetchOrders, 30000);
+    // Limpar intervalo ao desmontar o componente
+    return () => clearInterval(interval);
+  } else {
+    // Redireciona se não houver token
+    router.push('/login');
+  }
 });
 </script>
 
